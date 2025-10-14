@@ -1,1 +1,3 @@
 ipa-project/
+venv
+.env
