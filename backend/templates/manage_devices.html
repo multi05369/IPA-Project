@@ -70,9 +70,9 @@
   <!-- =================================== -->
   <!--             TAB CONTENT             -->
   <!-- =================================== -->
-  <main>
+  <main class="grid">
     <!-- Interfaces Panel -->
-    <div id="interfaces" class="tab-content bg-slate-800/70 border border-slate-700 rounded-2xl p-6">
+    <div id="interfaces" class="tab-content [grid-area:1/1] transition-opacity duration-300 ease-in-out opacity-100 bg-slate-800/70 border border-slate-700 rounded-2xl p-6">
       <table class="w-full text-center">
         <thead class="text-slate-400 border-b border-slate-600 text-sm">
           <tr>
@@ -206,27 +206,42 @@ end</code></pre>
   document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
+    let activePanel = document.querySelector('.tab-content.opacity-100') || panels[0];
+
+    // Initial visible tab (first one)
+    let activeTab = document.querySelector('.tab-content:not(.hidden)') || tabContents[0];
+    activeTab.classList.add('opacity-100', 'z-10');
 
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
-        const target = tab.getAttribute('data-tab');
+        const targetId = tab.getAttribute('data-tab');
+        const newTab = document.getElementById(targetId);
 
-        // Update tab buttons styling
+        // Ignore clicks on the same tab
+        if (newTab === activeTab) return;
+
+        // Update tab button styling
         tabs.forEach(t => {
-          t.classList.remove('text-white', 'border-pink-500');
+          t.classList.remove('text-white', 'border-b-2', 'border-pink-500');
           t.classList.add('text-slate-400');
         });
-        tab.classList.add('text-white', 'border-pink-500');
+        tab.classList.add('text-white', 'border-b-2', 'border-pink-500');
         tab.classList.remove('text-slate-400');
 
-        // Show/hide tab content
-        tabContents.forEach(content => {
-          if (content.id === target) {
-            content.classList.remove('hidden');
-          } else {
-            content.classList.add('hidden');
-          }
-        });
+        // Start fade-out on current active tab
+        activeTab.classList.add('opacity-0');
+        activeTab.classList.remove('opacity-100');
+
+        // After fade-out completes, hide it & fade in new tab
+        setTimeout(() => {
+          activeTab.classList.add('hidden');
+          newTab.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            newTab.classList.add('opacity-100', 'z-10');
+            newTab.classList.remove('opacity-0');
+          });
+          activeTab = newTab;
+        }, 250); // matches the duration below (250ms)
       });
     });
   });
