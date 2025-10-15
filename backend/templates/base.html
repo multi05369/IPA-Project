@@ -17,12 +17,12 @@
   </style>
 </head>
 
-<body class="relative bg-[#0b1221] text-white min-h-screen flex flex-col justify-between overflow-hidden">
+<body class="relative bg-[#0b1221] text-white min-h-screen flex flex-col justify-between">
   <video autoplay muted loop playsinline 
-       class="absolute inset-0 w-full h-full object-cover -z-10 opacity-40">
-      <source src="{{ url_for('static', filename='videos/background.mp4') }}" type="video/mp4">
-      Your browser does not support the video tag.
+    class="fixed inset-0 w-full h-full object-cover -z-10 opacity-40">
+    <source src="{{ url_for('static', filename='videos/background.mp4') }}" type="video/mp4">
   </video>
+
 
   <!-- Main content -->
   <main class="flex-1 flex justify-center items-center z-10 p-4">
