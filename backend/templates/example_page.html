@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Your Network{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-md mx-auto p-4">
+    Insert your code here! This is in the middle though :P
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const eyeOpen = document.getElementById('eye-open');
+        const eyeClosed = document.getElementById('eye-closed');
+
+        togglePassword.addEventListener('click', (event) => {
+            event.preventDefault(); // stop form submission
+            event.stopPropagation(); // stop event bubbling
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            eyeOpen.classList.toggle('hidden');
+            eyeClosed.classList.toggle('hidden');
+        });
+
+    });
+</script>
+{% endblock %}

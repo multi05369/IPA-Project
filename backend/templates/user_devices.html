@@ -1,52 +1,189 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}Manage Your Network{% endblock %}</title>
+{% extends 'base.html' %}
 
-  <!-- Tailwind CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+{% block title %}My Network Devices{% endblock %}
 
-  <!-- Optional favicon -->
-  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+{% block content %}
+<div class="w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
 
-  <!-- Smooth scrolling -->
-  <style>
-    html {
-      scroll-behavior: smooth;
-    }
-    body {
-      overflow-x: hidden;
-    }
-  </style>
-</head>
+  <!-- Header Section -->
+  <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-bold text-white">My Network Devices</h1>
+      <p class="mt-2 text-slate-400">Manage all you network devices through GUI.</p>
+    </div>
+    <div class="mt-4 sm:mt-0 flex-shrink-0 text-end">
+      <a href="#"
+        class="inline-flex items-center justify-center bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        Add Device
+      </a>
+      <p class="text-xs text-slate-500 text-center sm:text-right mt-2">This page shows all available devices with CDP
+        and SSH enabled.</p>
+    </div>
+  </header>
 
-<body class="relative bg-[#0b1221] text-white min-h-screen flex flex-col">
+  <!-- Mock Data for Demonstration -->
+  {% set devices = {
+  'Router': [
+  {'name': 'R1', 'ip': '192.168.2.5'},
+  {'name': 'R1', 'ip': '10.30.6.1'},
+  {'name': 'R1', 'ip': '20.6.1.2'},
+  {'name': 'R1', 'ip': '192.168.2.5'},
+  {'name': 'R1', 'ip': '192.168.2.5'},
+  {'name': 'R1', 'ip': '192.168.2.5'}
+  ],
+  'Switch': [
+  {'name': 'SW2', 'ip': '192.168.2.5'},
+  {'name': 'SW2', 'ip': '192.168.2.5'}
+  ],
+  'Others': []
+  } %}
 
-  <!-- Background Blur Layer -->
-  <img 
-    src="{{ url_for('static', filename='images/background-blur.png') }}"
-    class="fixed inset-0 w-full h-full object-cover opacity-25 blur-2xl -z-10"
-    alt="background blur"
-  >
+  <!-- Router Section -->
+  <section id="routers">
+    <div class="flex items-center mb-4">
+      <span class="inline-flex items-center justify-center h-8 w-8 rounded-full mr-3">
+        <!-- SVG is now blue -->
+        <svg class="h-7 w-7 text-sky-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M12 14V9M6.5 17.5H10.5M7.41604 11.0005C7.14845 10.388 7 9.71159 7 9.00049C7 7.87466 7.37209 6.83574 8 6M16.584 11.0005C16.8516 10.388 17 9.71159 17 9.00049C17 7.87466 16.6279 6.83574 16 6M18.7083 3C20.1334 4.59227 21 6.69494 21 9C21 9.68739 20.9229 10.3568 20.777 11M5.29168 3C3.86656 4.59227 3 6.69494 3 9C3 9.68739 3.07706 10.3568 3.22302 11M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V17.2C21 16.0799 21 15.5198 20.782 15.092C20.5903 14.7157 20.2843 14.4097 19.908 14.218C19.4802 14 18.9201 14 17.8 14H6.2C5.0799 14 4.51984 14 4.09202 14.218C3.71569 14.4097 3.40973 14.7157 3.21799 15.092C3 15.5198 3 16.0799 3 17.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
+      <h2 class="text-2xl font-bold text-white">Router</h2>
+    </div>
+    {% if devices['Router'] %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      {% for device in devices['Router'] %}
+      <div
+        class="device-card relative bg-slate-800/70 border border-slate-700 rounded-lg shadow-lg p-4 flex flex-col items-center justify-center text-center transition-transform transform hover:-translate-y-1">
+        <button class="remove-btn absolute top-2 right-2 text-slate-500 hover:text-white transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div class="mb-3">
+          <span class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-slate-700">
+            <!-- Router Icon used in card -->
+            <svg class="h-6 w-6 text-sky-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M12 14V9M6.5 17.5H10.5M7.41604 11.0005C7.14845 10.388 7 9.71159 7 9.00049C7 7.87466 7.37209 6.83574 8 6M16.584 11.0005C16.8516 10.388 17 9.71159 17 9.00049C17 7.87466 16.6279 6.83574 16 6M18.7083 3C20.1334 4.59227 21 6.69494 21 9C21 9.68739 20.9229 10.3568 20.777 11M5.29168 3C3.86656 4.59227 3 6.69494 3 9C3 9.68739 3.07706 10.3568 3.22302 11M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V17.2C21 16.0799 21 15.5198 20.782 15.092C20.5903 14.7157 20.2843 14.4097 19.908 14.218C19.4802 14 18.9201 14 17.8 14H6.2C5.0799 14 4.51984 14 4.09202 14.218C3.71569 14.4097 3.40973 14.7157 3.21799 15.092C3 15.5198 3 16.0799 3 17.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+        </div>
+        <p class="font-bold text-slate-200">{{ device.name }}</p>
+        <p class="text-sm text-slate-400 mb-4">{{ device.ip }}</p>
+        <!-- Manage button is now blue -->
+        <a href="#"
+          class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
+          Manage
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-slate-400">
+      <p>no devices detected :(</p>
+    </div>
+    {% endif %}
+  </section>
 
-  <!-- Main Page Content -->
-  <main class="flex-1 w-full">
-    {% block content %}{% endblock %}
-  </main>
+  <!-- Switch Section -->
+  <section id="switches" class="mt-12">
+    <div class="flex items-center mb-4">
+      <span class="inline-flex items-center justify-center h-8 w-8 mr-3">
+        <!-- SVG is now yellow -->
+        <svg class="h-7 w-7 text-yellow-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M7 9V15M11 12H11.01M14 12H14.01M17 12H17.01M4.6 15H19.4C19.9601 15 20.2401 15 20.454 14.891C20.6422 14.7951 20.7951 14.6422 20.891 14.454C21 14.2401 21 13.9601 21 13.4V10.6C21 10.0399 21 9.75992 20.891 9.54601C20.7951 9.35785 20.6422 9.20487 20.454 9.10899C20.2401 9 19.9601 9 19.4 9H4.6C4.03995 9 3.75992 9 3.54601 9.10899C3.35785 9.20487 3.20487 9.35785 3.10899 9.54601C3 9.75992 3 10.0399 3 10.6V13.4C3 13.9601 3 14.2401 3.10899 14.454C3.20487 14.6422 3.35785 14.7951 3.54601 14.891C3.75992 15 4.03995 15 4.6 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <h2 class="text-2xl font-bold text-white">Switch</h2>
+    </div>
+    {% if devices['Switch'] %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      {% for device in devices['Switch'] %}
+      <div
+        class="device-card relative bg-slate-800/70 border border-slate-700 rounded-lg shadow-lg p-4 flex flex-col items-center justify-center text-center transition-transform transform hover:-translate-y-1">
+        <button class="remove-btn absolute top-2 right-2 text-slate-500 hover:text-white transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div class="mb-3">
+          <span class="inline-flex items-center justify-center h-10 w-10 rounded-lg bg-slate-700">
+            <!-- Switch Icon used in card -->
+            <svg class="h-6 w-6 text-yellow-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 9V15M11 12H11.01M14 12H14.01M17 12H17.01M4.6 15H19.4C19.9601 15 20.2401 15 20.454 14.891C20.6422 14.7951 20.7951 14.6422 20.891 14.454C21 14.2401 21 13.9601 21 13.4V10.6C21 10.0399 21 9.75992 20.891 9.54601C20.7951 9.35785 20.6422 9.20487 20.454 9.10899C20.2401 9 19.9601 9 19.4 9H4.6C4.03995 9 3.75992 9 3.54601 9.10899C3.35785 9.20487 3.20487 9.35785 3.10899 9.54601C3 9.75992 3 10.0399 3 10.6V13.4C3 13.9601 3 14.2401 3.10899 14.454C3.20487 14.6422 3.35785 14.7951 3.54601 14.891C3.75992 15 4.03995 15 4.6 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+        <p class="font-bold text-slate-200">{{ device.name }}</p>
+        <p class="text-sm text-slate-400 mb-4">{{ device.ip }}</p>
+        <!-- Manage button is now blue -->
+        <a href="#"
+          class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg transition text-sm">
+          Manage
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-slate-400">
+        <p>no devices detected :(</p>
+    </div>
+    {% endif %}
+  </section>
 
-  <!-- Footer -->
-  <footer class="bg-[#111827]/95 backdrop-blur-sm text-center text-sm py-4 text-gray-300 mt-10">
-    ©2025 School of IT, King Mongkut’s Institute of Technology Ladkrabang.<br>
-    A service for managing your network.<br>
-    <span class="text-gray-400 text-xs">
-      An infrastructure programming automation project made by:
-      <a href="#" class="text-blue-400 hover:underline">jazzpu</a>,
-      <a href="#" class="text-blue-400 hover:underline">multi05369</a>,
-      <a href="#" class="text-blue-400 hover:underline">Nawa-Ong</a>
-    </span>
-  </footer>
+  <!-- Others Section -->
+  <section id="others" class="mt-12">
+    <div class="flex items-center mb-4">
+      <span class="inline-flex items-center justify-center h-8 w-8 rounded-full mr-3">
+        <!-- SVG is now pink -->
+        <svg class="h-7 w-7 text-pink-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 12H12.01M16 12H16.01M8 12H8.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <h2 class="text-2xl font-bold text-white">Others</h2>
+    </div>
+    <div class="text-slate-400">
+      {% if not devices['Others'] %}
+      <p>no devices detected :(</p>
+      {% else %}
+      <!-- Loop through other devices here if they exist -->
+      {% endif %}
+    </div>
+  </section>
 
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Find all the 'remove' buttons
+    const removeButtons = document.querySelectorAll('.remove-btn');
+
+    removeButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+        // Find the closest parent 'device-card' and remove it from the page
+        const card = event.currentTarget.closest('.device-card');
+        if (card) {
+          card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          card.style.transform = 'scale(0.9)';
+          card.style.opacity = '0';
+          setTimeout(() => {
+            card.remove();
+          }, 300); // Wait for the animation to finish
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}
+
