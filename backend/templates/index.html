@@ -38,12 +38,13 @@
                         <input type="password" name="password" id="password"
                                class="block w-full bg-slate-800/80 border border-slate-700 rounded-lg shadow-sm px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
                                placeholder="password" required>
-                        <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-white transition">
-                            <svg id="eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <button type="button" id="togglePassword" 
+                            class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-white transition z-10">
+                            <svg id="eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            <svg id="eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg id="eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 .91-2.92 3.168-5.32 5.864-6.354m6.432 12.708a10.025 10.025 0 004.793-12.708M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 2l20 20" />
                             </svg>
@@ -72,12 +73,15 @@
         const eyeOpen = document.getElementById('eye-open');
         const eyeClosed = document.getElementById('eye-closed');
 
-        togglePassword.addEventListener('click', () => {
+        togglePassword.addEventListener('click', (event) => {
+            event.preventDefault(); // stop form submission
+            event.stopPropagation(); // stop event bubbling
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
             eyeOpen.classList.toggle('hidden');
             eyeClosed.classList.toggle('hidden');
         });
+
     });
 </script>
 {% endblock %}

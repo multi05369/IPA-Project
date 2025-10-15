@@ -18,9 +18,11 @@
 </head>
 
 <body class="relative bg-[#0b1221] text-white min-h-screen flex flex-col justify-between overflow-hidden">
-  <img src="{{ url_for('static', filename='images/images.jpg') }}" 
-     class="absolute inset-0 w-full h-full object-cover opacity-25 blur-2xl -z-10" 
-     alt="background blur">
+  <video autoplay muted loop playsinline 
+       class="absolute inset-0 w-full h-full object-cover -z-10 opacity-40">
+      <source src="{{ url_for('static', filename='videos/background.mp4') }}" type="video/mp4">
+      Your browser does not support the video tag.
+  </video>
 
   <!-- Main content -->
   <main class="flex-1 flex justify-center items-center z-10 p-4">
@@ -29,15 +31,18 @@
 
   <!-- The footer is also inherited by all pages -->
   <footer class="bg-[#111827] text-center text-sm py-3 text-gray-300 z-10">
-    ©2025 School of IT, King Mongkut’s Institute of Technology Ladkrabang.<br>
+    ©2025 School of IT, King Mongkut's Institute of Technology Ladkrabang.<br>
     A service for managing your network.<br>
     <span class="text-gray-400 text-xs">
       An infrastructure programming automation project made by:
-      <a href="#" class="text-blue-400 hover:underline">jazzpu</a>,
-      <a href="#" class="text-blue-400 hover:underline">multi05369</a>,
-      <a href="#" class="text-blue-400 hover:underline">Nawa-Ong</a>
+      <a href="https://github.com/jazzpu" class="text-blue-400 hover:underline">jazzpu</a>,
+      <a href="https://github.com/multi05369" class="text-blue-400 hover:underline">multi05369</a>,
+      <a href="https://github.com/Nawa-Ong" class="text-blue-400 hover:underline">Nawa-Ong</a>
     </span>
   </footer>
+  
+  {% block scripts %}{% endblock %}
+  
   {% if debug %}
     <script src="http://127.0.0.1:35729/livereload.js?snipver=1"></script>
   {% endif %}
