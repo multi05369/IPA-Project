@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Manage Your Network{% endblock %}</title>
+
+  <!-- Tailwind CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+
+  <!-- Optional favicon -->
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+
+  <!-- Smooth scrolling -->
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+
+<body class="relative bg-[#0b1221] text-white min-h-screen flex flex-col">
+
+  <!-- Background Blur Layer -->
+  <img 
+    src="{{ url_for('static', filename='images/background-blur.png') }}"
+    class="fixed inset-0 w-full h-full object-cover opacity-25 blur-2xl -z-10"
+    alt="background blur"
+  >
+
+  <!-- Main Page Content -->
+  <main class="flex-1 w-full">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-[#111827]/95 backdrop-blur-sm text-center text-sm py-4 text-gray-300 mt-10">
+    ©2025 School of IT, King Mongkut’s Institute of Technology Ladkrabang.<br>
+    A service for managing your network.<br>
+    <span class="text-gray-400 text-xs">
+      An infrastructure programming automation project made by:
+      <a href="#" class="text-blue-400 hover:underline">jazzpu</a>,
+      <a href="#" class="text-blue-400 hover:underline">multi05369</a>,
+      <a href="#" class="text-blue-400 hover:underline">Nawa-Ong</a>
+    </span>
+  </footer>
+
+</body>
+</html>

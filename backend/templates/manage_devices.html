@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Manage Device{% endblock %}
+{% block content %}
+
+<section class="px-8 py-12 max-w-6xl mx-auto">
+  <!-- DEVICE HEADER -->
+  <div class="flex justify-between items-start mb-6">
+    <div>
+      <h1 class="text-3xl font-bold flex items-center gap-2">
+        Cisco Router <span class="text-pink-400">🪷</span>
+      </h1>
+      <p class="text-gray-400">Model: <strong>ER-X-SFP</strong> | Firmware: <strong>v2.0.9</strong></p>
+    </div>
+    <button class="bg-pink-500 hover:bg-pink-600 text-white px-5 py-2 rounded-full font-semibold shadow-md">Save Changes</button>
+  </div>
+
+  <!-- INFO BOXES -->
+  <div class="grid md:grid-cols-3 gap-5 mb-10">
+    <div class="bg-[#1b2235] p-4 rounded-xl flex items-center justify-between">
+      <div>
+        <h3 class="text-sm text-gray-400">Hostname</h3>
+        <p class="font-semibold text-lg">R-1</p>
+      </div>
+      <div class="text-cyan-400 text-3xl">🔗</div>
+    </div>
+    <div class="bg-[#1b2235] p-4 rounded-xl flex items-center justify-between">
+      <div>
+        <h3 class="text-sm text-gray-400">Serial Number</h3>
+        <p class="font-semibold text-lg">A4:B1:C2:D3:4D:E5d</p>
+      </div>
+      <div class="text-yellow-400 text-3xl">💡</div>
+    </div>
+    <div class="bg-[#1b2235] p-4 rounded-xl flex items-center justify-between">
+      <div>
+        <h3 class="text-sm text-gray-400">System Uptime</h3>
+        <p class="font-semibold text-lg">25 d 10h 40m 12s</p>
+      </div>
+      <div class="text-green-400 text-3xl">⏱️</div>
+    </div>
+  </div>
+
+  <!-- TAB HEADERS -->
+  <div class="flex gap-6 border-b border-gray-600 text-gray-400 mb-6">
+    <button class="text-white border-b-2 border-pink-400 pb-2 font-semibold">Interfaces</button>
+    <button>Configuration</button>
+    <button>Connection Test</button>
+    <button>Settings</button>
+  </div>
+
+  <!-- INTERFACES TABLE -->
+  <div class="bg-[#1b2235] rounded-2xl p-6">
+    <table class="w-full text-left">
+      <thead class="text-gray-400 border-b border-gray-700">
+        <tr>
+          <th class="pb-3">INTERFACE</th>
+          <th>DHCP</th>
+          <th>IP ADDRESS</th>
+          <th>VRF NAME</th>
+          <th>INTERFACE STATUS</th>
+        </tr>
+      </thead>
+      <tbody class="text-gray-200">
+        <tr class="border-b border-gray-700">
+          <td class="py-3">eth01</td>
+          <td><span class="text-green-400">● Online</span></td>
+          <td>192.168.12.56</td>
+          <td>Management</td>
+          <td><input type="checkbox" checked class="accent-blue-500"></td>
+        </tr>
+        <tr class="border-b border-gray-700">
+          <td class="py-3">eth02</td>
+          <td><span class="text-green-400">● Online</span></td>
+          <td>192.168.12.56</td>
+          <td>Data_plane</td>
+          <td><input type="checkbox" checked class="accent-blue-500"></td>
+        </tr>
+        <tr class="border-b border-gray-700">
+          <td class="py-3">eth03</td>
+          <td><span class="text-gray-500">● Offline</span></td>
+          <td>192.168.12.56</td>
+          <td>poopVRF</td>
+          <td><input type="checkbox" class="accent-blue-500"></td>
+        </tr>
+        <tr>
+          <td class="py-3">eth04</td>
+          <td><span class="text-green-400">● Online</span></td>
+          <td>-</td>
+          <td>Management</td>
+          <td><input type="checkbox" checked class="accent-blue-500"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% endblock %}
