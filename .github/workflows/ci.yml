@@ -1,0 +1,71 @@
+# This is the name of your pipeline, which will show up on GitHub
+name: Python & Node.js CI
+
+# This tells GitHub *when* to run this pipeline
+on:
+  # Run on any push to your main branch
+  push:
+    branches: [ "main" ]
+  # Run on any pull request that targets your main branch
+  pull_request:
+    branches: [ "main" ]
+
+# This defines the "jobs" that will run.
+jobs:
+  # We'll name our main job "build-and-test"
+  build-and-test:
+    # This pipeline will run on a fresh, clean computer (a "runner")
+    # using the latest version of Ubuntu.
+    runs-on: ubuntu-latest
+
+    # These are the step-by-step instructions for the runner
+    steps:
+      # Step 1: Check out your project's code
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      # --- Python Setup ---
+      # Step 2: Set up the Python language
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # You can change this to 3.9, 3.11, etc.
+
+      # Step 3: Install all your Python packages
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8  # We install this linter to check for code errors
+
+      # --- Node.js & Tailwind Setup ---
+      # Step 4: Set up the Node.js language (for Tailwind)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # You can change this if needed
+
+      # Step 5: Install all your Node.js packages
+      - name: Install Node.js dependencies
+        run: npm install
+        # This will read your package.json and install tailwind, postcss, etc.
+
+      # --- Linting & Building (The "Tests") ---
+      # Step 6: Check your Python code for basic errors/style
+      - name: Lint Python code with flake8
+        run: |
+          # This command will check your 'backend' folder for common Python errors
+          # It's a "static test" - it finds bugs without running the code.
+          flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      # Step 7: Build your Tailwind CSS files
+      - name: Build Tailwind CSS
+        run: npm run dev
+
+      # Step 8: (Future) Run your Python unit tests
+      # This step is commented out. When you add tests (e.g., with pytest),
+      # you can uncomment this.
+      # - name: Run Python tests
+      #   run: |
+      #     pip install pytest
+      #     pytest
