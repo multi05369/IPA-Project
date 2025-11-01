@@ -49,23 +49,31 @@ def close_db(e=None):
         db = None
 
 # Functions for the website
-def add_router(ip, username, password, device_type):
+def get_all_devices():
     """
-    Adds a router to the 'routers' collection.
+    Retrieves all devices from the 'devices' collection.
+    """
+    database = get_db()
+    devices_collection = database['devices']
+    return list(devices_collection.find())
+
+def add_device(ip, username, password, device_type):
+    """
+    Adds a device to the 'devices' collection.
     Returns True if added, False if already exists.
     """
     database = get_db()
-    routers_collection = database['routers']
+    devices_collection = database['devices']
 
-    # Check if router with same IP already exists
-    if routers_collection.find_one({"ip": ip}):
+    # Check if device with same IP already exists
+    if devices_collection.find_one({"ip": ip}):
         return False  # Already exists
 
-    router_data = {
+    device_data = {
         "ip": ip,
         "username": username,
         "password": password,
         "device_type": device_type
     }
-    routers_collection.insert_one(router_data)
+    devices_collection.insert_one(device_data)
     return True
