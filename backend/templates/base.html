@@ -14,6 +14,52 @@
     body {
       font-family: "Varela Round", sans-serif;
     }
+    /* TOAST STYLES */
+    #toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-width: 320px;
+      overflow: hidden;
+    }
+
+    .toast {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      color: white;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      /* Start off-screen */
+      transform: translateX(110%); 
+      animation: slideIn 0.5s forwards ease-out;
+    }
+
+    /* Specific styles for message "categories" */
+    .toast-error {
+      background-color: #DC2626; /* bg-red-600 */
+    }
+    .toast-success {
+      background-color: #16A34A; /* bg-green-600 */
+    }
+
+    /* Animation to slide out */
+    .toast.slide-out {
+      animation: slideOut 0.5s forwards ease-in;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(110%); }
+      to { transform: translateX(0); }
+    }
+
+    @keyframes slideOut {
+      from { transform: translateX(0); }
+      to { transform: translateX(110%); }
+    }
   </style>
 </head>
 
