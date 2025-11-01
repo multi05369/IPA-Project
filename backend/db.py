@@ -1,20 +1,22 @@
-from pymongo import MongoClient, DESCENDING
-from bson import ObjectId
+from pymongo import MongoClient
 import os
+from dotenv import load_dotenv
 
 client = None
 db = None
 
+load_dotenv()
+
 def init_db(app):
     global client, db
-    mongo_uri = app.config.get('MONGO_URI')
-
-    db_name = app.config.get('MONGO_DBNAME', 'ipa_project_db')
+    mongo_uri = os.environ.get('MONGO_URI')
+    db_name = os.environ.get('MONGO_DBNAME')
 
 
     if not mongo_uri:
-        print("WARNING: MONGO_URI not set in app config. Using default localhost connection.")
-        mongo_uri = 'mongodb://localhost:27017/'
+        print("WARNING: MONGO_URI not set in env. Using default localhost connection.")
+        mongo_uri = "mongodb://localhost:27017/"
+
     try:
         client = MongoClient(mongo_uri)
         db = client[db_name]
