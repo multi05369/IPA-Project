@@ -24,9 +24,17 @@
         </h1>
         <p class="text-slate-400 mt-1">Model: <strong>ER-X-SFP</strong> | Firmware: <strong>v2.0.9</strong></p>
       </div>
-      <button
-        class="bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-5 rounded-lg shadow-lg transition mt-4 sm:mt-0">Save
-        Changes</button>
+      <data value="" class="flex">
+        <button class="w-10 h-10 bg-slate-800/70 border border-slate-700 rounded-lg flex items-center justify-center mr-4 hover:bg-slate-700/70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30px" height="30px" fill="rgb(255 255 255)">
+            <path
+              d="M 7.59375 3 L 9.0625 5 L 13 5 C 16.324219 5 19 7.675781 19 11 L 19 15 L 16 15 L 20 20.46875 L 24 15 L 21 15 L 21 11 C 21 6.59375 17.40625 3 13 3 Z M 4 3.53125 L 0 9 L 3 9 L 3 13 C 3 17.40625 6.59375 21 11 21 L 16.40625 21 L 14.9375 19 L 11 19 C 7.675781 19 5 16.324219 5 13 L 5 9 L 8 9 Z" />
+          </svg>
+        </button>
+        <button
+          class="bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-5 rounded-lg shadow-lg transition mt-4 sm:mt-0">Save
+          Changes</button>
+      </data>
     </div>
 
     <div class="grid md:grid-cols-3 gap-5 mb-10">
@@ -72,7 +80,8 @@
   <!-- =================================== -->
   <main class="grid">
     <!-- Interfaces Panel -->
-    <div id="interfaces" class="tab-content [grid-area:1/1] transition-opacity duration-300 ease-in-out opacity-100 bg-slate-800/70 border border-slate-700 rounded-2xl p-6">
+    <div id="interfaces"
+      class="tab-content [grid-area:1/1] transition-opacity duration-300 ease-in-out opacity-100 bg-slate-800/70 border border-slate-700 rounded-2xl p-6">
       <table class="w-full text-center">
         <thead class="text-slate-400 border-b border-slate-600 text-sm">
           <tr>
@@ -109,32 +118,29 @@
             <td class="font-mono">{{ iface.ip }}</td>
             <td class="font-mono">{{ iface.vrf }}</td>
             <td class="text-center">
-  <label class="relative inline-flex items-center cursor-pointer">
-    <!-- The real toggle input -->
-    <input type="checkbox" class="sr-only peer" {% if iface.enabled %}checked{% endif %}>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <!-- The real toggle input -->
+                <input type="checkbox" class="sr-only peer" {% if iface.enabled %}checked{% endif %}>
 
-    <!-- The switch track -->
-    <div
-      class="relative w-20 h-8 bg-slate-600 rounded-full transition-colors duration-300 ease-in-out peer-checked:bg-blue-600
+                <!-- The switch track -->
+                <div class="relative w-20 h-8 bg-slate-600 rounded-full transition-colors duration-300 ease-in-out peer-checked:bg-blue-600
              after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all after:duration-300
              peer-checked:after:translate-x-[48px]">
 
-            </div>
-      <!-- OFF text -->
-      <span
-        class="absolute top-1/2 left-[38px] -translate-y-1/2 text-xs font-semibold text-slate-300 transition-opacity duration-300 ease-in-out
+                </div>
+                <!-- OFF text -->
+                <span class="absolute top-1/2 left-[38px] -translate-y-1/2 text-xs font-semibold text-slate-300 transition-opacity duration-300 ease-in-out
                peer-checked:opacity-0">
-        OFF
-      </span>
+                  OFF
+                </span>
 
-      <!-- ON text -->
-      <span
-        class="absolute top-1/2 left-4 -translate-y-1/2 text-xs font-semibold text-white transition-opacity duration-300 ease-in-out
+                <!-- ON text -->
+                <span class="absolute top-1/2 left-4 -translate-y-1/2 text-xs font-semibold text-white transition-opacity duration-300 ease-in-out
                opacity-0 peer-checked:opacity-100">
-        ON
-      </span>
-  </label>
-</td>
+                  ON
+                </span>
+              </label>
+            </td>
 
 
           </tr>

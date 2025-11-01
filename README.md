@@ -11,7 +11,5 @@ npm install
 
 <!-- To start project -->
 <!-- These docker container and volume names can be changed due to your satisfactory ! -->
-docker pull mongo
-docker volume create mongo-data
-docker run -d -p 27017:27017 --name my-mongo-db -v mongo-data:/data/db mongo
+docker compose up -d (-d is optional)
 Run Flask + Tailwind together ==> npm run dev
