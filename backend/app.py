@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
-import sys
+from flask import Flask, render_template, request, redirect
 import os
-from . import db
+import db
+from dotenv import load_dotenv
 
+load_dotenv()
 # Your project's root is 'IPA-Project', and this file is in 'backend'.
 # Flask needs to know where the templates and static folders are relative to this file.
 # The default paths work because they are in the same 'backend' folder.
@@ -15,13 +16,14 @@ app.config['DB_NAME'] = os.environ.get('DB_NAME')
 
 # initialize database connection with web
 db.init_db(app)
+print("Database initialized in app.py")
 
 # Teardown DB connection after website goes down
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db.close_db()
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
 
@@ -30,15 +32,16 @@ def index():
 def add_device_route():
     """
     Handles the form submission from index.html.
-    This is the SYNCHRONOUS test you wanted.
+    This is the SYNCHRONOUS test 
     """
     if request.method == 'POST':
         ip = request.form.get('ip_address')
         username = request.form.get('username')
         password = request.form.get('password')
-
+        device_type = request.form.get('device_type')
+        print("[+] We are inside add device method")
         # This talks DIRECTLY to MongoDB
-        success = db.add_router(ip, username, password)
+        success = db.add_router(ip, username, password, device_type)
         
         if success:
             print(f"Successfully added {ip} to database.")
@@ -46,9 +49,9 @@ def add_device_route():
             print(f"Device {ip} already exists.")
 
         # Go to the page that shows all devices
-        return redirect(url_for('user_devices_route'))
+        return redirect('/user_devices')
 
-@app.route('/user_devices')
+@app.route('/user_devices', methods=['GET'])
 def user_devices():
     all_routers = db.get_all_routers()
     return render_template('user_devices.html', routers=all_routers)

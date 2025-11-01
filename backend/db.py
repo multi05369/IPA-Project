@@ -9,12 +9,13 @@ load_dotenv()
 
 def init_db(app):
     global client, db
-    mongo_uri = os.environ.get('MONGO_URI')
-    db_name = os.environ.get('MONGO_DBNAME')
+    mongo_uri = os.environ.get('MONGODB_URI')
+    db_name = os.environ.get('DB_NAME')
+    print(f"Initializing MongoDB connection to {mongo_uri}, database: {db_name}")
 
 
     if not mongo_uri:
-        print("WARNING: MONGO_URI not set in env. Using default localhost connection.")
+        print("WARNING: MONGODB_URI not set in env. Using default localhost connection.")
         mongo_uri = "mongodb://localhost:27017/"
 
     try:
@@ -22,7 +23,7 @@ def init_db(app):
         db = client[db_name]
 
         client.admin.command('ping')
-        print(f"Connected to MongoDB at {mongo_uri}, using database '{db_name}'")
+        print(f"👌Connected to MongoDB at {mongo_uri}, using database '{db_name}'")
 
     except Exception as e:  
         print(f"Error connecting to MongoDB: {e}")
