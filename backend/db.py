@@ -49,3 +49,23 @@ def close_db(e=None):
         db = None
 
 # Functions for the website
+def add_router(ip, username, password, device_type):
+    """
+    Adds a router to the 'routers' collection.
+    Returns True if added, False if already exists.
+    """
+    database = get_db()
+    routers_collection = database['routers']
+
+    # Check if router with same IP already exists
+    if routers_collection.find_one({"ip": ip}):
+        return False  # Already exists
+
+    router_data = {
+        "ip": ip,
+        "username": username,
+        "password": password,
+        "device_type": device_type
+    }
+    routers_collection.insert_one(router_data)
+    return True
