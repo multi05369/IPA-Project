@@ -5,7 +5,7 @@ import os
 client = None
 db = None
 
-def initi_db(app):
+def init_db(app):
     global client, db
     mongo_uri = app.config.get('MONGO_URI')
 
