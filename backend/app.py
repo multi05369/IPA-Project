@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, flash
 import os
 import db
 from dotenv import load_dotenv
@@ -11,18 +11,14 @@ app = Flask(__name__, template_folder='templates', static_folder='static')
 app.debug = True
 
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['MONGODB_URI'] = os.environ.get('MONGODB_URI')
-app.config['DB_NAME'] = os.environ.get('DB_NAME')
-
-# initialize database connection with web
-db.init_db(app)
-print("Database initialized in app.py")
 
 # Teardown DB connection after website goes down
 @app.teardown_appcontext
 def shutdown_session(exception=None):
     db.close_db()
 
+
+# Routes for web pages
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html')
@@ -30,52 +26,48 @@ def index():
 # This path is just for handling adding devices
 @app.route('/add_device', methods=['POST'])
 def add_device_route():
-    """
-    Handles the form submission from index.html.
-    This is the SYNCHRONOUS test 
-    """
-    if request.method == 'POST':
-        ip = request.form.get('ip_address')
-        username = request.form.get('username')
-        password = request.form.get('password')
-        device_type = request.form.get('device_type')
-        print("[+] We are inside add device method")
-        # This talks DIRECTLY to MongoDB
-        success = db.add_router(ip, username, password, device_type)
-        
-        if success:
-            print(f"Successfully added {ip} to database.")
-        else:
-            print(f"Device {ip} already exists.")
+    ip = request.form.get('ip_address')
+    username = request.form.get('username')
+    password = request.form.get('password')
+    device_type = request.form.get('device_type')
 
-        # Go to the page that shows all devices
-        return redirect('/user_devices')
+    if not ip:
+        flash("Please provide an IP address.", "warning")
+        return redirect('/')
 
-@app.route('/user_devices', methods=['GET'])
+    success = db.add_device(ip, username, password, device_type)
+
+    if success:
+        flash(f"Device {ip} added successfully!", "success")
+    else:
+        flash(f"Device {ip} already exists.", "warning")
+
+    return redirect('/user_devices')
+
+@app.route('/user_devices')
 def user_devices():
-    all_routers = db.get_all_routers()
-    return render_template('user_devices.html', routers=all_routers)
+    all_devices = db.get_all_devices()
+    return render_template('user_devices.html', devices=all_devices)
 
 @app.route('/manage/<ip>')
 def manage_device(ip):
     router = db.get_router_info(ip)
-    # 1. Get latest data from DB
     config = db.get_latest_running_config(ip)
     details = db.get_latest_device_details(ip)
     interfaces = db.get_latest_interface_status(ip)
     vrfs = db.get_latest_vrf_details(ip)
-    print("in manage_device route rn")
-    # 2. Render the template
-    return render_template('manage_devices.html', 
-                            ip=ip, 
-                            router=router,
-                            config=config, 
-                            details=details, 
-                            interfaces=interfaces,
-                            vrfs=vrfs)
 
+    return render_template(
+        'manage_devices.html',
+        ip=ip,
+        router=router,
+        config=config,
+        details=details,
+        interfaces=interfaces,
+        vrfs=vrfs
+    )
 
 if __name__ == '__main__':
     # Runs server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)
 
