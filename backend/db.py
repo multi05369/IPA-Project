@@ -27,3 +27,22 @@ def init_db(app):
         client = None
         db = None
 
+def get_db():
+    """
+    Returns the database instance. Call init_db first.
+    """
+    if db is None:
+        raise RuntimeError("Database not initialized. Call init_db() first.")
+    return db
+
+def close_db(e=None):
+    """
+    Closes the MongoDB connection when the app context ends.
+    """
+    global client, db
+    if client:
+        client.close()
+        client = None
+        db = None
+
+# Functions for the website
