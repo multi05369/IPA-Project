@@ -1,5 +1,6 @@
 ipa-project/
 .env
+.DS_Store
 #Python environment
 venv/
 __pycache__/
