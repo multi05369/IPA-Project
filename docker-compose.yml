@@ -10,6 +10,39 @@ services:
       - mongo-data:/data/db
     env_file:
       - .env
+    environment:
+      MONGO_URI: "mongodb://admin:passwd@mongo:27017/ipa_project_db?authSource=admin"
+      DB_NAME: "${DB_NAME}"
+    networks:
+      - app-net
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    depends_on:
+      - mongo
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - app-net
+    env_file:
+      - .env
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  scheduler:
+    build: ./scheduler
+    container_name: ipa-scheduler
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      - mongo
+      - rabbitmq
     networks:
       - app-net
 
