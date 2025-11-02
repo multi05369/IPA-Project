@@ -151,6 +151,7 @@
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold text-white">Running-Config</h2>
         <button
+          onclick="download_btn"
           class="bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded-lg text-sm">Download</button>
       </div>
       <pre class="bg-slate-900/50 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto"><code>{{ config }}</code></pre>
@@ -218,6 +219,49 @@
       });
     });
   });
+  
+  // Download Configuration Button
+document.addEventListener('DOMContentLoaded', () => {
+  const downloadBtn = document.querySelector('button:has(+ pre)') || 
+                      Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Download'));
+  
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', async () => {
+      const ip = "{{ ip }}";
+      
+      try {
+        const response = await fetch(`/download_config/${ip}`);
+        const data = await response.json();
+        
+        if (data.status === 'ok') {
+          // Create a blob from the config text
+          const blob = new Blob([data.config], { type: 'text/plain' });
+          
+          // Create a temporary download link
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = data.filename;
+          
+          // Trigger download
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Clean up the URL object
+          window.URL.revokeObjectURL(url);
+          
+          console.log(`Downloaded: ${data.filename}`);
+        } else {
+          alert(`Error: ${data.message}`);
+        }
+      } catch (error) {
+        console.error('Error downloading config:', error);
+        alert('Failed to download configuration');
+      }
+    });
+  }
+});
 
   // Refresh interface toggle states
   document.querySelectorAll('.peer').forEach(sw => {

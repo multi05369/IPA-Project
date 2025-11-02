@@ -99,6 +99,30 @@ def toggle_interface(ip, iface):
         return jsonify({"status": "error", "message": str(e)}), 500
 # End of Save Changes button route
 
+# Download the configuration file
+@app.route('/download_config/<ip>', methods=['GET'])
+def download_config(ip):
+    try:
+        config = db.get_latest_running_config(ip)
+        
+        if config == "No configuration found" or config == "Error fetching configuration":
+            return jsonify({"status": "error", "message": config}), 404
+        
+        device_info = db.get_device_info(ip)
+        hostname = device_info.get("hostname", "device") if device_info else "device"
+        
+        # Create filename: hostname_ip_running-config.txt
+        filename = f"{hostname}_{ip}_running-config.txt"
+        
+        return jsonify({
+            "status": "ok",
+            "filename": filename,
+            "config": config
+        })
+    except Exception as e:
+        print(f"Error downloading config: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 # # This is for rabbit MQ connection to everytime you press refresh config button
 # @app.route("/interface/<ip>/<iface>/toggle", methods=["POST"])
 # def toggle_interface(ip, iface):
