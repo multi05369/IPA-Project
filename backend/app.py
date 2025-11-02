@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, jsonify
+from netmiko import ConnectHandler
 import os
 import db
 from dotenv import load_dotenv
@@ -52,10 +53,10 @@ def user_devices():
 @app.route('/manage/<ip>')
 def manage_device(ip):
     router = db.get_router_info(ip)
-    config = db.get_latest_running_config(ip)
-    details = db.get_latest_device_details(ip)
-    interfaces = db.get_latest_interface_status(ip)
-    vrfs = db.get_latest_vrf_details(ip)
+    config = db.get_latest_running_config(ip) #showrunning-config
+    details = db.get_latest_device_details(ip) #show version
+    interfaces = db.get_latest_interface_status(ip) #show ip interface brief
+    vrfs = db.get_latest_vrf_details(ip) #show vrf
 
     return render_template(
         'manage_devices.html',
@@ -66,6 +67,22 @@ def manage_device(ip):
         interfaces=interfaces,
         vrfs=vrfs
     )
+
+# This is for rabbit MQ connection to everytime you press refresh config button
+@app.route("/interface/<ip>/<iface>/toggle", methods=["POST"])
+def toggle_interface(ip, iface):
+    enable = request.json.get("enable", True)
+    device = db.get_device_by_ip(ip)
+    conn = ConnectHandler(**device)
+
+    if enable:
+        conn.send_config_set([f"interface {iface}", "no shutdown"])
+    else:
+        conn.send_config_set([f"interface {iface}", "shutdown"])
+
+    conn.disconnect()
+    return jsonify({"status": "ok"})
+
 
 if __name__ == '__main__':
     # Runs server

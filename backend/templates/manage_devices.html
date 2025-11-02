@@ -251,5 +251,19 @@ end</code></pre>
       });
     });
   });
+
+  // Refresh interface toggle states
+  document.querySelectorAll('.peer').forEach(sw => {
+  sw.addEventListener('change', async e => {
+    const iface = e.target.closest('tr').querySelector('td').innerText;
+    const ip = "{{ device.ip }}";
+    await fetch(`/interface/${ip}/${iface}/toggle`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ enable: e.target.checked })
+      });
+    });
+  });
+
 </script>
 {% endblock %}
