@@ -104,14 +104,33 @@ def get_latest_vrf_details(ip):
     result = db['devices'].find_one({"ip": ip}, {"vrfs": 1})
     return result.get("vrfs", []) if result else []
 
-def update_interface_status(ip, interface_name, status):
+# Add this new function to db.py
+def update_interface_statuses(ip, updates):
+    """
+    Updates the 'enabled' status for multiple interfaces on a single device.
+    'updates' should be a list of dicts, e.g.,
+    [ {"name": "eth01", "enabled": True}, {"name": "eth03", "enabled": False} ]
+    """
     db = get_db()
-    result = db['interface_status'].update_one(
-        {"ip_parent": ip, "interfaces.name": interface_name},
-        {"$set": {"interfaces.$.status": status}}
-    )
-    if result.matched_count == 0:
-        print(f"Interface {interface_name} not found for IP {ip}")
+    devices = db['devices']
+    
+    try:
+        # Loop through each update provided from the frontend
+        for update in updates:
+            iface_name = update.get('name')
+            is_enabled = update.get('enabled')
+            
+            if not iface_name:
+                continue
+
+            # This command finds the document by IP,
+            # then finds the element in the 'interfaces' array with the matching name,
+            # and sets its 'enabled' field to the new value.
+            devices.update_one(
+                {"ip": ip, "interfaces.name": iface_name},
+                {"$set": {"interfaces.$.enabled": is_enabled}}
+            )
+        return True
+    except Exception as e:
+        print(f"Error updating interface statuses in DB: {e}")
         return False
-    print(f"Updated interface {interface_name} to {status} for IP {ip}")
-    return True

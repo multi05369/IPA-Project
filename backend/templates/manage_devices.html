@@ -33,18 +33,20 @@
         <span class="text-gray-500 text-xs font-semibold">({{ ip }})</span>
       </div>
       <data value="" class="flex">
-        <button type="submit"
+        <button
           class="w-10 h-10 bg-slate-800/70 border border-slate-700 rounded-lg flex items-center justify-center mr-4 hover:bg-slate-700/70 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30px" height="30px"
-            fill="rgb(255 255 255)">
-            <path
-              d="M 7.59375 3 L 9.0625 5 L 13 5 C 16.324219 5 19 7.675781 19 11 L 19 15 L 16 15 L 20 20.46875 L 24 15 L 21 15 L 21 11 C 21 6.59375 17.40625 3 13 3 Z M 4 3.53125 L 0 9 L 3 9 L 3 13 C 3 17.40625 6.59375 21 11 21 L 16.40625 21 L 14.9375 19 L 11 19 C 7.675781 19 5 16.324219 5 13 L 5 9 L 8 9 Z" />
-          </svg>
+          <a href="/manage/{{ip}}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30px" height="30px"
+              fill="rgb(255 255 255)">
+              <path
+                d="M 7.59375 3 L 9.0625 5 L 13 5 C 16.324219 5 19 7.675781 19 11 L 19 15 L 16 15 L 20 20.46875 L 24 15 L 21 15 L 21 11 C 21 6.59375 17.40625 3 13 3 Z M 4 3.53125 L 0 9 L 3 9 L 3 13 C 3 17.40625 6.59375 21 11 21 L 16.40625 21 L 14.9375 19 L 11 19 C 7.675781 19 5 16.324219 5 13 L 5 9 L 8 9 Z" />
+            </svg>
           </a>
         </button>
         <button id="save-changes-btn"
           class="bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-5 rounded-lg shadow-lg transition mt-4 sm:mt-0">Save
-          Changes</button>
+          Changes
+        </button>
       </data>
     </div>
 
@@ -124,7 +126,8 @@
             <td class="text-center">
               <label class="relative inline-flex items-center cursor-pointer">
                 <!-- The real toggle input -->
-                <input type="checkbox" class="sr-only peer" {% if iface.enabled %}checked{% endif %}>
+                <input type="checkbox" class="sr-only peer" data-iface-name="{{ iface.name }}" {% if iface.enabled
+                  %}checked{% endif %}>
 
                 <!-- The switch track -->
                 <div class="relative w-20 h-8 bg-slate-600 rounded-full transition-colors duration-300 ease-in-out peer-checked:bg-blue-600
@@ -265,6 +268,53 @@
         } catch (error) {
           console.error('Error downloading config:', error);
           alert('Failed to download configuration');
+        }
+      });
+    }
+    const deviceIp = "{{ ip }}";
+
+    // Find the save button
+    const saveBtn = document.getElementById('save-changes-btn');
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        console.log("Save button clicked. Gathering changes...");
+
+        // Find all the toggle switches
+        const toggles = document.querySelectorAll('.peer[data-iface-name]');
+
+        const updates = [];
+        toggles.forEach(toggle => {
+          updates.push({
+            name: toggle.getAttribute('data-iface-name'), // Get name from data-attribute
+            enabled: toggle.checked                     // Get current state (true/false)
+          });
+        });
+
+        console.log("Sending updates:", updates);
+
+        try {
+          // Send the entire 'updates' array to your new Flask route
+          const response = await fetch(`/manage/${deviceIp}/update_interfaces`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ interfaces: updates })
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            alert('Changes saved successfully!');
+            console.log(result.message);
+          } else {
+            alert('Error saving changes: ' + result.message);
+            console.error(result.message);
+          }
+        } catch (error) {
+          alert('A network error occurred. Please try again.');
+          console.error('Fetch error:', error);
         }
       });
     }

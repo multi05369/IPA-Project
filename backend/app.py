@@ -71,31 +71,51 @@ def manage_device(ip):
     )
 
 # Save Changes button route
-@app.route("/interface/<ip>/<iface>/toggle", methods=["POST"])
-def toggle_interface(ip, iface):
-    try:
-        enable = request.json.get("enable", True)
-        device = db.get_device_by_ip(ip)
+# ADD THIS NEW ROUTE
+@app.route("/manage/<ip>/update_interfaces", methods=["POST"])
+def update_interfaces(ip):
+    # Get the list of updates from the frontend
+    # e.g., [ {"name": "eth01", "enabled": True}, ... ]
+    updates = request.json.get("interfaces", [])
+    
+    # 1. Get device credentials from DB
+    # (Using get_router_info as it's defined in your db.py)
+    device = db.device(ip) 
+    if not device:
+        return jsonify({"status": "error", "message": "Device not found"}), 404
+
+    # Prepare Netmiko-compatible device dictionary
+    netmiko_device = {
+        "device_type": "cisco_ios", # You should make this dynamic from device.get('device_type')
+        "host": device.get('ip'),
+        "username": device.get('username'),
+        "password": device.get('password'),
+    }
+
+    # 2. Build the configuration commands
+    config_commands = []
+    for update in updates:
+        iface_name = update.get('name')
+        is_enabled = update.get('enabled')
         
-        if not device:
-            return jsonify({"status": "error", "message": "Device not found"}), 404
-        
-        # Connect to device and send command
-        conn = ConnectHandler(**device)
-        if enable:
-            conn.send_config_set([f"interface {iface}", "no shutdown"])
-            status = "up"
+        config_commands.append(f"interface {iface_name}")
+        if is_enabled:
+            config_commands.append("no shutdown")
         else:
-            conn.send_config_set([f"interface {iface}", "shutdown"])
-            status = "down"
-        conn.disconnect()
+            config_commands.append("shutdown")
+
+    try:
+        # 3. Apply changes to the actual device
+        with ConnectHandler(**netmiko_device) as conn:
+            conn.send_config_set(config_commands)
         
-        # Update database with new status
-        db.update_interface_status(ip, iface, status)
+        # 4. Save the new states to the database
+        db.update_interface_statuses(ip, updates)
         
-        return jsonify({"status": "ok", "interface": iface, "new_status": status})
+        return jsonify({"status": "success", "message": "Changes applied and saved."})
+
     except Exception as e:
-        print(f"Error toggling interface: {e}")
+        print(f"Error applying interface config: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 # End of Save Changes button route
 
