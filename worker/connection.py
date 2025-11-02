@@ -1,5 +1,6 @@
 """worker/connection.py"""
 import os
+import subprocess
 from dotenv import load_dotenv
 from netmiko import ConnectHandler
 
