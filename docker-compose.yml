@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: my-mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    env_file:
+      - .env
+    networks:
+      - app-net
+
+volumes:
+  mongo-data:
+
+networks:
+  app-net:
+

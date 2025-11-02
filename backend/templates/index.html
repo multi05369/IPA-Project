@@ -11,14 +11,15 @@
         </h1>
     </div>
 
-    <form action="/user_devices">
+    <form action="/add_device" method="POST">
         <div class="space-y-6">
             <!-- IP Address Input -->
             <div>
                 <label for="ip_address" class="block text-sm font-medium text-slate-400 mb-1">IP Address</label>
                 <input type="text" name="ip_address" id="ip_address"
-                       class="block w-full bg-slate-800/80 border border-slate-700 rounded-lg shadow-sm px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
-                       placeholder="e.g., 192.168.2.1" pattern="^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$" required>
+                    class="block w-full bg-slate-800/80 border border-slate-700 rounded-lg shadow-sm px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+                    placeholder="e.g., 192.168.2.1"
+                    pattern="^((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$" required>
                 <p class="mt-2 text-xs text-slate-500">Add your network device's IP address to start managing.</p>
             </div>
 
@@ -27,8 +28,8 @@
                 <div>
                     <label for="username" class="block text-sm font-medium text-slate-400 mb-1">Username</label>
                     <input type="text" name="username" id="username"
-                           class="block w-full bg-slate-800/80 border border-slate-700 rounded-lg shadow-sm px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
-                           placeholder="username" required>
+                        class="block w-full bg-slate-800/80 border border-slate-700 rounded-lg shadow-sm px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+                        placeholder="username" required>
                 </div>
 
                 <!-- Password Input -->
@@ -36,17 +37,23 @@
                     <label for="password" class="block text-sm font-medium text-slate-400 mb-1">Password</label>
                     <div class="relative">
                         <input type="password" name="password" id="password"
-                               class="block w-full bg-slate-800/80 border border-slate-700 rounded-lg shadow-sm px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
-                               placeholder="password" required>
-                        <button type="button" id="togglePassword" 
+                            class="block w-full bg-slate-800/80 border border-slate-700 rounded-lg shadow-sm px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition"
+                            placeholder="password" required>
+                        <button type="button" id="togglePassword"
                             class="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-white transition z-10">
-                            <svg id="eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            <svg id="eye-open" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            <svg id="eye-closed" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 .91-2.92 3.168-5.32 5.864-6.354m6.432 12.708a10.025 10.025 0 004.793-12.708M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 2l20 20" />
+                            <svg id="eye-closed" xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 pointer-events-none hidden" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7 .91-2.92 3.168-5.32 5.864-6.354m6.432 12.708a10.025 10.025 0 004.793-12.708M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 2l20 20" />
                             </svg>
                         </button>
                     </div>
@@ -54,10 +61,20 @@
             </div>
         </div>
 
+        <div>
+            <label for="device_type" class="block text-sm font-medium text-slate-400 mb-1">Device Type</label>
+            <select id="device_type" name="device_type"
+                class="block w-full bg-slate-800/80 border border-slate-700 rounded-lg shadow-sm px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition">
+                <option value="router">Router</option>
+                <option value="switch">Switch</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
         <!-- Submit Button -->
         <div class="mt-8">
             <button type="submit"
-                    class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-pink-500">
+                class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-pink-500">
                 Start
             </button>
         </div>
