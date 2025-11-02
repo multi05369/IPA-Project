@@ -1,0 +1,68 @@
+// ชื่อของ CI pipeline สำหรับ
+name: Python & Node.js CI
+
+on:
+  // ทำงานเมื่อมีการ push ไปที่ main branch
+  push:
+    branches: [ "main" ]
+  // ทำงานเมื่อมี pull request บน main branch
+  pull_request:
+    branches: [ "main" ]
+
+// "jobs" ระหว่างการทำงาน
+jobs:
+  # job หลักชื่อ "build-and-test"
+  build-and-test:
+    // This pipeline จะทำงานบน latest version ของ Ubuntu.
+    runs-on: ubuntu-latest
+
+    // instructions สำหรับ runner
+    steps:
+      // ขั้นตอนที่ 1: ดช็คความถูกต้องของโค้ด
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      // --- Python Setup ---
+      // ขั้นตอนที่ 2: ติดตั้ง Python
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }} // เปลี่ยนได้ตามความต้องการ
+
+      // ขั้นตอนที่ 3: ติดตั้ง packages ที่ใช้ใน project
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8  // error checking
+
+      // --- Node.js & Tailwind Setup ---
+      // ขั้นตอนที่ 4: ติดตั้ง node version ให้ตรง
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.5'
+          
+      // ขั้นตอนที่ 5: โหลด node packages
+      - name: Install Node.js dependencies
+        run: npm install
+        // ลง package ตาม package.json
+
+      // --- Linting & Building (The "Tests") ---
+      // ขั้นตอนที่ 6: หา basic errorsและวิธีการเขียนที่ผิด
+      - name: Lint Python code with flake8
+        run: |
+          // หา bug โดยที่ไม่ต้องรันโค้ด (ใน backend folder)
+          flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      // ขั้นตอนที่ 7: run code และ สร้างไฟล์ tailwind css
+      - name: Build Tailwind CSS
+        run: npm run dev
+
+      // ขั้นตอนที่ 8: (Future) Run your Python unit tests
+      # This step is commented out. When you add tests (e.g., with pytest),
+      # you can uncomment this.
+      # - name: Run Python tests
+      #   run: |
+      #     pip install pytest
+      #     pytest
