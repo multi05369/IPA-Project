@@ -73,19 +73,19 @@ def get_router_info(ip):
 
 def get_latest_running_config(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"running_config": 1})
+    result = db['devices'].find_one({"ip": ip}, {"running_config": 1, "config":1})
     return result.get("running_config") if result else None
 
 
 def get_latest_device_details(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"firmware": 1, "uptime": 1, "device_type": 1})
+    result = db['device_details'].find_one({"ip": ip}, {"firmware": 1, "uptime": 1, "device_type": 1, "mac": 1})
     return result if result else {}
 
 
 def get_latest_interface_status(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"interfaces": 1})
+    result = db['interface_status'].find_one({"ip_parent": ip}, {"interfaces": 1})
     return result.get("interfaces", []) if result else []
 
 

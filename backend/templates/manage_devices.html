@@ -23,6 +23,7 @@
           </svg>
         </h1>
         <p class="text-slate-400 mt-1">Model: <strong>ER-X-SFP</strong> | Firmware: <strong>v2.0.9</strong></p>
+        <span class="text-gray-500 text-xs font-semibold">({{ ip }})</span>
       </div>
       <data value="" class="flex">
         <button class="w-10 h-10 bg-slate-800/70 border border-slate-700 rounded-lg flex items-center justify-center mr-4 hover:bg-slate-700/70 transition">
@@ -41,21 +42,21 @@
       <div class="bg-slate-800/70 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
         <div>
           <h3 class="text-sm text-slate-400">Hostname</h3>
-          <p class="font-semibold text-lg text-white">R-1</p>
+          <p class="font-semibold text-lg text-white">{{ router.hostname }}</p>
         </div>
         <div class="text-cyan-400 text-3xl">🔗</div>
       </div>
       <div class="bg-slate-800/70 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
         <div>
           <h3 class="text-sm text-slate-400">Serial Number</h3>
-          <p class="font-semibold text-lg text-white">A4:B1:C2:D3:4D:E5d</p>
+          <p class="font-semibold text-lg text-white">{{ details.mac }}</p>
         </div>
         <div class="text-yellow-400 text-3xl">💡</div>
       </div>
       <div class="bg-slate-800/70 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
         <div>
           <h3 class="text-sm text-slate-400">System Uptime</h3>
-          <p class="font-semibold text-lg text-white">25d 10h 40m 12s</p>
+          <p class="font-semibold text-lg text-white">{{ details.uptime }}</p>
         </div>
         <div class="text-green-400 text-3xl">⏱️</div>
       </div>
@@ -93,19 +94,12 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-700">
-          <!-- Data -->
-          {% set interfaces = [
-          {'name': 'eth01', 'status': 'Online', 'ip': '192.168.12.56', 'vrf': 'Management', 'enabled': True},
-          {'name': 'eth02', 'status': 'Online', 'ip': '192.168.12.56', 'vrf': 'Data_plane', 'enabled': True},
-          {'name': 'eth03', 'status': 'Offline', 'ip': '192.168.12.56', 'vrf': 'poopVRF', 'enabled': False},
-          {'name': 'eth04', 'status': 'Online', 'ip': '-', 'vrf': 'Management', 'enabled': True}
-          ] %}
 
           {% for iface in interfaces %}
           <tr>
             <td class="text-center py-4 font-mono font-semibold">{{ iface.name }}</td>
             <td class="text-center">
-              {% if iface.status == 'Online' %}
+              {% if iface.status == 'up' %}
               <span class="inline-flex items-center gap-2 text-green-400">
                 <span class="h-2 w-2 rounded-full bg-green-400"></span>Online
               </span>
@@ -157,36 +151,8 @@
           class="bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded-lg text-sm">Download</button>
       </div>
       <pre class="bg-slate-900/50 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto"><code>!
-! Last configuration change at 17:15:20 GMT+7 Wed Oct 15 2025
-!
-version 15.1
-service timestamps debug datetime msec
-service timestamps log datetime msec
-no service password-encryption
-!
-hostname R1
-!
-boot-start-marker
-boot-end-marker
-!
-no aaa new-model
-!
-!
-ip cef
-!
-interface GigabitEthernet0/0
- description WAN Interface
- ip address 10.0.0.1 255.255.255.0
- duplex auto
- speed auto
-!
-interface GigabitEthernet0/1
- description LAN Interface
- ip address 192.168.1.1 255.255.255.0
- duplex auto
- speed auto
-!
-end</code></pre>
+        {{ running_configs.config }}
+      </code></pre>
     </div>
 
     <!-- Connection Test Panel -->
@@ -256,7 +222,7 @@ end</code></pre>
   document.querySelectorAll('.peer').forEach(sw => {
   sw.addEventListener('change', async e => {
     const iface = e.target.closest('tr').querySelector('td').innerText;
-    const ip = "{{ device.ip }}";
+    const ip = "{{ ip }}";
     await fetch(`/interface/${ip}/${iface}/toggle`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},

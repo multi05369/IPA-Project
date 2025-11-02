@@ -53,10 +53,11 @@ def user_devices():
 @app.route('/manage/<ip>')
 def manage_device(ip):
     router = db.get_router_info(ip)
-    config = db.get_latest_running_config(ip) #showrunning-config
+    config = db.get_latest_running_config(ip)
     details = db.get_latest_device_details(ip) #show version
     interfaces = db.get_latest_interface_status(ip) #show ip interface brief
     vrfs = db.get_latest_vrf_details(ip) #show vrf
+    running_configs = db.get_latest_running_config(ip) #show running config
 
     return render_template(
         'manage_devices.html',
@@ -65,7 +66,8 @@ def manage_device(ip):
         config=config,
         details=details,
         interfaces=interfaces,
-        vrfs=vrfs
+        vrfs=vrfs,
+        running_configs=running_configs
     )
 
 # This is for rabbit MQ connection to everytime you press refresh config button
