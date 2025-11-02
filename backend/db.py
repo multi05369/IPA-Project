@@ -69,7 +69,6 @@ def get_all_devices():
 def get_device_info(ip):
     db = get_db()
     result = db['devices'].find_one({"ip": ip}, {"device_type": 1, "hostname": 1})
-    print(f"Device info result: {result}")  # Debug print
     return result
 
 
@@ -104,3 +103,15 @@ def get_latest_vrf_details(ip):
     db = get_db()
     result = db['devices'].find_one({"ip": ip}, {"vrfs": 1})
     return result.get("vrfs", []) if result else []
+
+def update_interface_status(ip, interface_name, status):
+    db = get_db()
+    result = db['interface_status'].update_one(
+        {"ip_parent": ip, "interfaces.name": interface_name},
+        {"$set": {"interfaces.$.status": status}}
+    )
+    if result.matched_count == 0:
+        print(f"Interface {interface_name} not found for IP {ip}")
+        return False
+    print(f"Updated interface {interface_name} to {status} for IP {ip}")
+    return True

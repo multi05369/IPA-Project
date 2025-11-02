@@ -22,12 +22,15 @@
               d="M735.472 265.659c118.81 0 215.122 96.312 215.122 215.122 0 72.662-36.376 138.927-94.997 178.411 9.689 24.717 14.767 51.002 14.767 77.937 0 118.81-96.312 215.122-215.122 215.122-54.129 0-105.007-20.233-144.106-55.678-39.091 35.444-89.969 55.678-144.099 55.678-118.81 0-215.122-96.312-215.122-215.122 0-26.935 5.078-53.22 14.767-77.937-58.621-39.484-94.997-105.749-94.997-178.411 0-118.809 96.31-215.122 215.112-215.122 3.384 0 6.778.097 10.214.29C307.5 156.928 399.367 71.683 511.135 71.683c111.774 0 203.636 85.242 214.124 194.266a182.75 182.75 0 0110.214-.29zm-422.006 43.239c-9.78-1.512-18.398-2.279-26.67-2.279-96.18 0-174.152 77.975-174.152 174.162 0 64.026 34.865 121.891 89.921 152.398 9.568 5.302 13.281 17.186 8.432 26.991-11.862 23.988-18.123 50.069-18.123 76.959 0 96.189 77.973 174.162 174.162 174.162 49.727 0 96.007-21.074 128.92-57.403 8.128-8.972 22.224-8.973 30.354-.002 32.925 36.333 79.206 57.405 128.932 57.405 96.189 0 174.162-77.973 174.162-174.162 0-26.89-6.261-52.971-18.123-76.959-4.848-9.805-1.136-21.69 8.432-26.991 55.056-30.507 89.921-88.372 89.921-152.398 0-96.189-77.973-174.162-174.162-174.162-8.269 0-16.875.766-26.66 2.279-12.545 1.939-23.814-7.883-23.606-20.575-.123-97.918-78.015-175.68-174.073-175.68-96.022 0-173.903 77.718-174.161 173.682.307 14.689-10.962 24.512-23.507 22.573z" />
           </svg>
         </h1>
-        <p class="text-slate-400 mt-1">Model: <strong>{{ details.model }}</strong> | Firmware: <strong>{{ details.firmware }}</strong></p>
+        <p class="text-slate-400 mt-1">Model: <strong>{{ details.model }}</strong> | Firmware: <strong>{{
+            details.firmware }}</strong></p>
         <span class="text-gray-500 text-xs font-semibold">({{ ip }})</span>
       </div>
       <data value="" class="flex">
-        <button class="w-10 h-10 bg-slate-800/70 border border-slate-700 rounded-lg flex items-center justify-center mr-4 hover:bg-slate-700/70 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30px" height="30px" fill="rgb(255 255 255)">
+        <button
+          class="w-10 h-10 bg-slate-800/70 border border-slate-700 rounded-lg flex items-center justify-center mr-4 hover:bg-slate-700/70 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30px" height="30px"
+            fill="rgb(255 255 255)">
             <path
               d="M 7.59375 3 L 9.0625 5 L 13 5 C 16.324219 5 19 7.675781 19 11 L 19 15 L 16 15 L 20 20.46875 L 24 15 L 21 15 L 21 11 C 21 6.59375 17.40625 3 13 3 Z M 4 3.53125 L 0 9 L 3 9 L 3 13 C 3 17.40625 6.59375 21 11 21 L 16.40625 21 L 14.9375 19 L 11 19 C 7.675781 19 5 16.324219 5 13 L 5 9 L 8 9 Z" />
           </svg>
@@ -150,9 +153,7 @@
         <button
           class="bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded-lg text-sm">Download</button>
       </div>
-      <pre class="bg-slate-900/50 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto"><code>!
-        {{ running_configs.config }}
-      </code></pre>
+      <pre class="bg-slate-900/50 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto"><code>{{ config }}</code></pre>
     </div>
 
     <!-- Connection Test Panel -->
@@ -220,14 +221,21 @@
 
   // Refresh interface toggle states
   document.querySelectorAll('.peer').forEach(sw => {
-  sw.addEventListener('change', async e => {
-    const iface = e.target.closest('tr').querySelector('td').innerText;
-    const ip = "{{ ip }}";
-    await fetch(`/interface/${ip}/${iface}/toggle`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ enable: e.target.checked })
-      });
+    sw.addEventListener('change', async e => {
+      const iface = e.target.closest('tr').querySelector('td').innerText;
+      const ip = "{{ ip }}";
+      await fetch(`/interface/${ip}/${interfaceName}/toggle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enable: true }) // or false for shutdown
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'ok') {
+            // Refresh the page or update UI
+            location.reload();
+          }
+        });
     });
   });
 

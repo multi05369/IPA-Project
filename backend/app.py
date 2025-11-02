@@ -70,20 +70,49 @@ def manage_device(ip):
         running_configs=running_configs
     )
 
-# This is for rabbit MQ connection to everytime you press refresh config button
+# Save Changes button route
 @app.route("/interface/<ip>/<iface>/toggle", methods=["POST"])
 def toggle_interface(ip, iface):
-    enable = request.json.get("enable", True)
-    device = db.get_device_by_ip(ip)
-    conn = ConnectHandler(**device)
+    try:
+        enable = request.json.get("enable", True)
+        device = db.get_device_by_ip(ip)
+        
+        if not device:
+            return jsonify({"status": "error", "message": "Device not found"}), 404
+        
+        # Connect to device and send command
+        conn = ConnectHandler(**device)
+        if enable:
+            conn.send_config_set([f"interface {iface}", "no shutdown"])
+            status = "up"
+        else:
+            conn.send_config_set([f"interface {iface}", "shutdown"])
+            status = "down"
+        conn.disconnect()
+        
+        # Update database with new status
+        db.update_interface_status(ip, iface, status)
+        
+        return jsonify({"status": "ok", "interface": iface, "new_status": status})
+    except Exception as e:
+        print(f"Error toggling interface: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+# End of Save Changes button route
 
-    if enable:
-        conn.send_config_set([f"interface {iface}", "no shutdown"])
-    else:
-        conn.send_config_set([f"interface {iface}", "shutdown"])
+# # This is for rabbit MQ connection to everytime you press refresh config button
+# @app.route("/interface/<ip>/<iface>/toggle", methods=["POST"])
+# def toggle_interface(ip, iface):
+#     enable = request.json.get("enable", True)
+#     device = db.get_device_by_ip(ip)
+#     conn = ConnectHandler(**device)
 
-    conn.disconnect()
-    return jsonify({"status": "ok"})
+#     if enable:
+#         conn.send_config_set([f"interface {iface}", "no shutdown"])
+#     else:
+#         conn.send_config_set([f"interface {iface}", "shutdown"])
+
+#     conn.disconnect()
+#     return jsonify({"status": "ok"})
 
 
 if __name__ == '__main__':
