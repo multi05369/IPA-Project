@@ -52,7 +52,7 @@ def user_devices():
 
 @app.route('/manage/<ip>')
 def manage_device(ip):
-    router = db.get_router_info(ip)
+    router = db.get_device_info(ip)
     config = db.get_latest_running_config(ip)
     details = db.get_latest_device_details(ip) #show version
     interfaces = db.get_latest_interface_status(ip) #show ip interface brief

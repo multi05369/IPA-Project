@@ -66,20 +66,31 @@ def get_all_devices():
     }
 
 
-def get_router_info(ip):
+def get_device_info(ip):
     db = get_db()
-    return db['devices'].find_one({"ip": ip})
+    result = db['devices'].find_one({"ip": ip}, {"device_type": 1, "hostname": 1})
+    print(f"Device info result: {result}")  # Debug print
+    return result
 
 
 def get_latest_running_config(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"running_config": 1, "config":1})
-    return result.get("running_config") if result else None
+    try:
+        result = db['running_configs'].find_one(
+            {"ip": ip},
+            {"config": 1}
+        )
+        if result and 'config' in result:
+            return result['config']
+        return "No configuration found"
+    except Exception as e:
+        print(f"Error fetching running config: {e}")
+        return "Error fetching configuration"
 
 
 def get_latest_device_details(ip):
     db = get_db()
-    result = db['device_details'].find_one({"ip": ip}, {"firmware": 1, "uptime": 1, "device_type": 1, "mac": 1})
+    result = db['device_details'].find_one({"ip": ip}, {"firmware": 1, "uptime": 1, "device_type": 1, "mac": 1, "model": 1, "firmware": 1})
     return result if result else {}
 
 
