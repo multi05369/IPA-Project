@@ -12,6 +12,20 @@ services:
       - .env
     networks:
       - app-net
+  web:
+    build: ./web
+    container_name: ipa-web-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/"
+      DB_NAME: "ipa_project_db"
+    depends_on:
+      - mongo
+    networks:
+      - app-net
 
 volumes:
   mongo-data:
