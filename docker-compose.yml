@@ -51,8 +51,8 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
   web:
     build: ./web
-    container_name: web-app
-    ports:  
+    container_name: ipa-web-app
+    ports:
       - "8080:8080"
     env_file:
       - .env
@@ -63,6 +63,8 @@ services:
       - mongo
     networks:
       - app-net
+
+      
   worker:
     build: ./worker
     container_name: ipa-worker
@@ -78,20 +80,6 @@ services:
     depends_on:
       - mongo
       - rabbitmq
-    networks:
-      - app-net
-  web:
-    build: ./web
-    container_name: ipa-web-app
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env
-    environment:
-      MONGODB_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/"
-      DB_NAME: "ipa_project_db"
-    depends_on:
-      - mongo
     networks:
       - app-net
 

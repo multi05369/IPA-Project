@@ -1,3 +1,110 @@
+import re
+def parse_show_version_to_json(text: str):
+    """
+    Parse the output of 'show version' into a structured dict as specified.
+    Returns a list with one dict (to match your requested format).
+    """
+    # Initialize fields
+    result = {
+        "software_image": "",
+        "version": "",
+        "release": "",
+        "rommon": "",
+        "hostname": "",
+        "uptime": "",
+        "uptime_years": "",
+        "uptime_weeks": "",
+        "uptime_days": "",
+        "uptime_hours": "",
+        "uptime_minutes": "",
+        "reload_reason": "",
+        "running_image": "",
+        "hardware": [],
+        "serial": [],
+        "config_register": "",
+        "mac_address": [],
+        "restarted": ""
+    }
+    lines = text.splitlines()
+    # Patterns for extraction
+    version_re = re.compile(r"Version ([\d.]+)\(([^)]+)\), RELEASE SOFTWARE.*")
+    version_alt_re = re.compile(r"Version ([\d.]+), RELEASE SOFTWARE \(([^)]+)\)")
+    hostname_re = re.compile(r"^([\w-]+) uptime is (.+)")
+    uptime_re = re.compile(r"(\d+) years, (\d+) weeks, (\d+) days, (\d+) hours, (\d+) minutes")
+    uptime_simple_re = re.compile(r"(\d+) hours, (\d+) minutes")
+    image_re = re.compile(r"System image file is \"(.+?)\"")
+    hardware_re = re.compile(r"^cisco (\S+).+processor")
+    serial_re = re.compile(r"Processor board ID ([\w\d]+)")
+    config_reg_re = re.compile(r"Configuration register is (\S+)")
+    reload_re = re.compile(r"^Last reload reason: (.+)")
+    mac_re = re.compile(r"(?:address is|MAC Address) ([\w.:-]+)", re.IGNORECASE)
+    software_image_re = re.compile(r'System image file is ".*?/([\w-]+)"')
+    rommon_re = re.compile(r"ROM: (.+)")
+    running_image_re = re.compile(r"Running image: (.+)")
+    # Extraction loop
+    for line in lines:
+        if not result["hostname"]:
+            m = hostname_re.match(line)
+            if m:
+                result["hostname"] = m.group(1)
+                result["uptime"] = m.group(2)
+                # Try to extract uptime details
+                m2 = uptime_re.search(result["uptime"])
+                if m2:
+                    result["uptime_years"] = m2.group(1)
+                    result["uptime_weeks"] = m2.group(2)
+                    result["uptime_days"] = m2.group(3)
+                    result["uptime_hours"] = m2.group(4)
+                    result["uptime_minutes"] = m2.group(5)
+                else:
+                    m2 = uptime_simple_re.search(result["uptime"])
+                    if m2:
+                        result["uptime_hours"] = m2.group(1)
+                        result["uptime_minutes"] = m2.group(2)
+        if not result["version"]:
+            m = version_re.search(line)
+            if m:
+                result["version"] = m.group(1)
+                result["release"] = m.group(2)
+            else:
+                m = version_alt_re.search(line)
+                if m:
+                    result["version"] = m.group(1)
+                    result["release"] = m.group(2)
+        if not result["software_image"]:
+            m = software_image_re.search(line)
+            if m:
+                result["software_image"] = m.group(1)
+        if not result["rommon"]:
+            m = rommon_re.search(line)
+            if m:
+                result["rommon"] = m.group(1)
+        if not result["running_image"]:
+            m = running_image_re.search(line)
+            if m:
+                result["running_image"] = m.group(1)
+        if not result["reload_reason"]:
+            m = reload_re.search(line)
+            if m:
+                result["reload_reason"] = m.group(1)
+        if not result["config_register"]:
+            m = config_reg_re.search(line)
+            if m:
+                result["config_register"] = m.group(1)
+        m = hardware_re.search(line)
+        if m:
+            hw = m.group(1)
+            if hw not in result["hardware"]:
+                result["hardware"].append(hw)
+        m = serial_re.search(line)
+        if m:
+            sn = m.group(1)
+            if sn not in result["serial"]:
+                result["serial"].append(sn)
+        for mac in mac_re.findall(line):
+            if mac not in result["mac_address"]:
+                result["mac_address"].append(mac)
+    return [result]
 
 import pika
 import json
@@ -75,11 +182,76 @@ def crop_show_ip_int_brief(text: str) -> str:
     return "\n".join([ln.rstrip() for ln in kept]).strip()
 
 
-def normalize_output(command: str, text: str) -> str:
-    """Normalize raw/parsed command output per command type."""
+
+def parse_show_ip_int_brief_to_json(text: str):
+    """
+    Parse the output of 'show ip interface brief' into a list of dicts.
+    Each dict has keys: interface, ip_address, status, proto.
+    """
+    # First, crop to the table only
+    cropped = crop_show_ip_int_brief(text)
+    lines = [ln for ln in cropped.splitlines() if ln.strip()]
+    if not lines:
+        return []
+    # Find header line and column positions
+    header = lines[0]
+    columns = [col.strip().lower().replace('-', '_') for col in header.split()]
+    # Map header names to expected keys
+    col_map = {
+        'interface': 'interface',
+        'ip_address': 'ip_address',
+        'ip-address': 'ip_address',
+        'status': 'status',
+        'proto': 'proto',
+        'protocol': 'proto',
+    }
+    # Find the indices for each expected column
+    col_indices = []
+    for col in columns:
+        mapped = col_map.get(col, col)
+        col_indices.append(mapped)
+    # Parse each row
+    result = []
+    seen_interfaces = set()
+    for row in lines[1:]:
+        # Split by whitespace, but keep 'administratively down' together
+        parts = row.split()
+        # Heuristic: if 'administratively' is present, join with next part
+        if 'administratively' in parts:
+            idx = parts.index('administratively')
+            if idx+1 < len(parts):
+                parts[idx] = 'administratively down'
+                del parts[idx+1]
+        # Only keep rows with at least 4 columns
+        if len(parts) >= 4:
+            # Skip header row or any row where interface is 'Interface'
+            if parts[0].lower() == 'interface':
+                continue
+            # Skip duplicates
+            if parts[0] in seen_interfaces:
+                continue
+            seen_interfaces.add(parts[0])
+            entry = {
+                'interface': parts[0],
+                'ip_address': parts[1],
+                'status': parts[-2],
+                'proto': parts[-1],
+            }
+            result.append(entry)
+    return result
+
+
+def normalize_output(command: str, text: str):
+    """Normalize raw/parsed command output per command type.
+    For 'show ip interface brief', return a list of dicts (JSON-serializable).
+    For 'show version', return a list with one dict as specified.
+    For others, return trimmed text.
+    """
     c = (command or '').lower().strip()
     if 'show ip interface brief' in c:
-        return crop_show_ip_int_brief(text)
+        return parse_show_ip_int_brief_to_json(text)
+    if 'show version' in c:
+        return parse_show_version_to_json(text)
     return (text or '').strip()
 
 
@@ -88,7 +260,7 @@ def get_playbooks():
     return {
         "show_ip_int_brief": "show_ip_interface_brief.yml",
         "show_running_config": "show_running_config.yml",
-        "show_cdp_neighbor": "show_cdp_neighbor.yml",
+        "show_version": "show_version.yml",
     }
 
 
@@ -217,24 +389,32 @@ def process_job(ip, username, password, device_type="cisco_ios"):
         with open(inventory_path, "w") as f:
             f.write(inventory_content)
 
-        # Choose a default playbook to execute (can be extended later)
+        # Execute a sequence of network show commands via their playbooks
         playbooks = get_playbooks()
-        playbook = playbooks.get("show_ip_int_brief")
+        commands = [
+            ("show ip interface brief", "show_ip_int_brief"),
+            ("show running-config", "show_running_config"),
+            ("show version", "show_version"),
+        ]
 
-        rc, stdout, stderr = run_ansible_playbook(playbook, inventory_path)
-        if rc == 0:
-            parsed = parse_ansible_output(stdout)
-            # If parsing produced nothing, prefer the raw stdout or stderr so
-            # the output field contains the command results rather than an
-            # empty string. This ensures the UI / DB always keep the result.
-            if not parsed or parsed.strip() == "":
-                parsed = (stdout or "").strip() or (stderr or "").strip() or ""
+        for command_text, key in commands:
+            playbook_file = playbooks.get(key)
+            if not playbook_file:
+                save_command_output(ip, command_text, "", success=False, error=f"Playbook key '{key}' not found")
+                continue
 
-            normalized = normalize_output("show ip interface brief", parsed)
-            save_command_output(ip, "show ip interface brief", normalized, success=True)
-        else:
-            err_text = stderr or stdout or "ansible-playbook returned non-zero exit code"
-            save_command_output(ip, "show ip interface brief", "", success=False, error=err_text)
+            rc, stdout, stderr = run_ansible_playbook(playbook_file, inventory_path)
+            if rc == 0:
+                parsed = parse_ansible_output(stdout)
+                # If parsing produced nothing, prefer the raw stdout or stderr
+                if not parsed or parsed.strip() == "":
+                    parsed = (stdout or "").strip() or (stderr or "").strip() or ""
+
+                normalized = normalize_output(command_text, parsed)
+                save_command_output(ip, command_text, normalized, success=True)
+            else:
+                err_text = stderr or stdout or "ansible-playbook returned non-zero exit code"
+                save_command_output(ip, command_text, "", success=False, error=err_text)
     except Exception as e:
         save_command_output(ip, "show ip interface brief", "", success=False, error=str(e))
 

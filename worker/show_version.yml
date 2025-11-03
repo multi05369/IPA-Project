@@ -1,11 +1,11 @@
 ---
-- name: Show CDP Neighbor
+- name: Show Version
   hosts: routers
   gather_facts: no
   tasks:
-    - name: Run show cdp neighbor
+    - name: Run show version
       cisco.ios.ios_command:
-        commands: show cdp neighbor
+        commands: show version
       register: result
     - name: Print output
       debug:
