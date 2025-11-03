@@ -1,0 +1,9 @@
+MONGODB_URI="mongodb://username:password@hostip:port/database_name?authSource=username"
+DB_NAME=""
+
+# Used on mongodb first run to create the root user
+MONGO_INITDB_ROOT_USERNAME=""
+MONGO_INITDB_ROOT_PASSWORD=""
+
+# Secret key for flask
+SECRET_KEY=""

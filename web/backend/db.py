@@ -66,26 +66,36 @@ def get_all_devices():
     }
 
 
-def get_router_info(ip):
+def get_device_info(ip):
     db = get_db()
-    return db['devices'].find_one({"ip": ip})
+    result = db['devices'].find_one({"ip": ip}, {"device_type": 1, "hostname": 1})
+    return result
 
 
 def get_latest_running_config(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"running_config": 1})
-    return result.get("running_config") if result else None
+    try:
+        result = db['running_configs'].find_one(
+            {"ip": ip},
+            {"config": 1}
+        )
+        if result and 'config' in result:
+            return result['config']
+        return "No configuration found"
+    except Exception as e:
+        print(f"Error fetching running config: {e}")
+        return "Error fetching configuration"
 
 
 def get_latest_device_details(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"firmware": 1, "uptime": 1, "device_type": 1})
+    result = db['device_details'].find_one({"ip": ip}, {"firmware": 1, "uptime": 1, "device_type": 1, "mac": 1, "model": 1, "firmware": 1})
     return result if result else {}
 
 
 def get_latest_interface_status(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"interfaces": 1})
+    result = db['interface_status'].find_one({"ip_parent": ip}, {"interfaces": 1})
     return result.get("interfaces", []) if result else []
 
 
@@ -93,3 +103,34 @@ def get_latest_vrf_details(ip):
     db = get_db()
     result = db['devices'].find_one({"ip": ip}, {"vrfs": 1})
     return result.get("vrfs", []) if result else []
+
+# Add this new function to db.py
+def update_interface_statuses(ip, updates):
+    """
+    Updates the 'enabled' status for multiple interfaces on a single device.
+    'updates' should be a list of dicts, e.g.,
+    [ {"name": "eth01", "enabled": True}, {"name": "eth03", "enabled": False} ]
+    """
+    db = get_db()
+    devices = db['devices']
+    
+    try:
+        # Loop through each update provided from the frontend
+        for update in updates:
+            iface_name = update.get('name')
+            is_enabled = update.get('enabled')
+            
+            if not iface_name:
+                continue
+
+            # This command finds the document by IP,
+            # then finds the element in the 'interfaces' array with the matching name,
+            # and sets its 'enabled' field to the new value.
+            devices.update_one(
+                {"ip": ip, "interfaces.name": iface_name},
+                {"$set": {"interfaces.$.enabled": is_enabled}}
+            )
+        return True
+    except Exception as e:
+        print(f"Error updating interface statuses in DB: {e}")
+        return False

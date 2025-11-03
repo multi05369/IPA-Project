@@ -5,6 +5,12 @@
 {% block content %}
 <div class="w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 text-slate-200">
 
+  <button class="mb-5 px-5 py-2 bg-gray-700 rounded-lg hover:bg-gray-500 hover:transition-colors">
+    <a href="/user_devices">
+      back
+    </a>
+  </button>
+
   <!-- =================================== -->
   <!--      DEVICE HEADER & INFO BOXES     -->
   <!-- =================================== -->
@@ -12,7 +18,7 @@
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
       <div>
         <h1 class="text-3xl md:text-4xl font-bold text-white flex items-center gap-3">
-          Cisco Router
+          Cisco {{ router.device_type }}
           <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
           <?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
           <svg fill="rgb(219 39 119)" class="h-8 w-8" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
@@ -22,18 +28,25 @@
               d="M735.472 265.659c118.81 0 215.122 96.312 215.122 215.122 0 72.662-36.376 138.927-94.997 178.411 9.689 24.717 14.767 51.002 14.767 77.937 0 118.81-96.312 215.122-215.122 215.122-54.129 0-105.007-20.233-144.106-55.678-39.091 35.444-89.969 55.678-144.099 55.678-118.81 0-215.122-96.312-215.122-215.122 0-26.935 5.078-53.22 14.767-77.937-58.621-39.484-94.997-105.749-94.997-178.411 0-118.809 96.31-215.122 215.112-215.122 3.384 0 6.778.097 10.214.29C307.5 156.928 399.367 71.683 511.135 71.683c111.774 0 203.636 85.242 214.124 194.266a182.75 182.75 0 0110.214-.29zm-422.006 43.239c-9.78-1.512-18.398-2.279-26.67-2.279-96.18 0-174.152 77.975-174.152 174.162 0 64.026 34.865 121.891 89.921 152.398 9.568 5.302 13.281 17.186 8.432 26.991-11.862 23.988-18.123 50.069-18.123 76.959 0 96.189 77.973 174.162 174.162 174.162 49.727 0 96.007-21.074 128.92-57.403 8.128-8.972 22.224-8.973 30.354-.002 32.925 36.333 79.206 57.405 128.932 57.405 96.189 0 174.162-77.973 174.162-174.162 0-26.89-6.261-52.971-18.123-76.959-4.848-9.805-1.136-21.69 8.432-26.991 55.056-30.507 89.921-88.372 89.921-152.398 0-96.189-77.973-174.162-174.162-174.162-8.269 0-16.875.766-26.66 2.279-12.545 1.939-23.814-7.883-23.606-20.575-.123-97.918-78.015-175.68-174.073-175.68-96.022 0-173.903 77.718-174.161 173.682.307 14.689-10.962 24.512-23.507 22.573z" />
           </svg>
         </h1>
-        <p class="text-slate-400 mt-1">Model: <strong>ER-X-SFP</strong> | Firmware: <strong>v2.0.9</strong></p>
+        <p class="text-slate-400 mt-1">Model: <strong>{{ details.model }}</strong> | Firmware: <strong>{{
+            details.firmware }}</strong></p>
+        <span class="text-gray-500 text-xs font-semibold">({{ ip }})</span>
       </div>
       <data value="" class="flex">
-        <button class="w-10 h-10 bg-slate-800/70 border border-slate-700 rounded-lg flex items-center justify-center mr-4 hover:bg-slate-700/70 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30px" height="30px" fill="rgb(255 255 255)">
-            <path
-              d="M 7.59375 3 L 9.0625 5 L 13 5 C 16.324219 5 19 7.675781 19 11 L 19 15 L 16 15 L 20 20.46875 L 24 15 L 21 15 L 21 11 C 21 6.59375 17.40625 3 13 3 Z M 4 3.53125 L 0 9 L 3 9 L 3 13 C 3 17.40625 6.59375 21 11 21 L 16.40625 21 L 14.9375 19 L 11 19 C 7.675781 19 5 16.324219 5 13 L 5 9 L 8 9 Z" />
-          </svg>
-        </button>
         <button
+          class="w-10 h-10 bg-slate-800/70 border border-slate-700 rounded-lg flex items-center justify-center mr-4 hover:bg-slate-700/70 transition">
+          <a href="/manage/{{ip}}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30px" height="30px"
+              fill="rgb(255 255 255)">
+              <path
+                d="M 7.59375 3 L 9.0625 5 L 13 5 C 16.324219 5 19 7.675781 19 11 L 19 15 L 16 15 L 20 20.46875 L 24 15 L 21 15 L 21 11 C 21 6.59375 17.40625 3 13 3 Z M 4 3.53125 L 0 9 L 3 9 L 3 13 C 3 17.40625 6.59375 21 11 21 L 16.40625 21 L 14.9375 19 L 11 19 C 7.675781 19 5 16.324219 5 13 L 5 9 L 8 9 Z" />
+            </svg>
+          </a>
+        </button>
+        <button id="save-changes-btn"
           class="bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-5 rounded-lg shadow-lg transition mt-4 sm:mt-0">Save
-          Changes</button>
+          Changes
+        </button>
       </data>
     </div>
 
@@ -41,21 +54,21 @@
       <div class="bg-slate-800/70 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
         <div>
           <h3 class="text-sm text-slate-400">Hostname</h3>
-          <p class="font-semibold text-lg text-white">R-1</p>
+          <p class="font-semibold text-lg text-white">{{ router.hostname }}</p>
         </div>
         <div class="text-cyan-400 text-3xl">🔗</div>
       </div>
       <div class="bg-slate-800/70 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
         <div>
           <h3 class="text-sm text-slate-400">Serial Number</h3>
-          <p class="font-semibold text-lg text-white">A4:B1:C2:D3:4D:E5d</p>
+          <p class="font-semibold text-lg text-white">{{ details.mac }}</p>
         </div>
         <div class="text-yellow-400 text-3xl">💡</div>
       </div>
       <div class="bg-slate-800/70 border border-slate-700 p-4 rounded-xl flex items-center justify-between">
         <div>
           <h3 class="text-sm text-slate-400">System Uptime</h3>
-          <p class="font-semibold text-lg text-white">25d 10h 40m 12s</p>
+          <p class="font-semibold text-lg text-white">{{ details.uptime }}</p>
         </div>
         <div class="text-green-400 text-3xl">⏱️</div>
       </div>
@@ -93,19 +106,12 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-700">
-          <!-- Data -->
-          {% set interfaces = [
-          {'name': 'eth01', 'status': 'Online', 'ip': '192.168.12.56', 'vrf': 'Management', 'enabled': True},
-          {'name': 'eth02', 'status': 'Online', 'ip': '192.168.12.56', 'vrf': 'Data_plane', 'enabled': True},
-          {'name': 'eth03', 'status': 'Offline', 'ip': '192.168.12.56', 'vrf': 'poopVRF', 'enabled': False},
-          {'name': 'eth04', 'status': 'Online', 'ip': '-', 'vrf': 'Management', 'enabled': True}
-          ] %}
 
           {% for iface in interfaces %}
           <tr>
             <td class="text-center py-4 font-mono font-semibold">{{ iface.name }}</td>
             <td class="text-center">
-              {% if iface.status == 'Online' %}
+              {% if iface.status == 'up' %}
               <span class="inline-flex items-center gap-2 text-green-400">
                 <span class="h-2 w-2 rounded-full bg-green-400"></span>Online
               </span>
@@ -120,7 +126,8 @@
             <td class="text-center">
               <label class="relative inline-flex items-center cursor-pointer">
                 <!-- The real toggle input -->
-                <input type="checkbox" class="sr-only peer" {% if iface.enabled %}checked{% endif %}>
+                <input type="checkbox" class="sr-only peer" data-iface-name="{{ iface.name }}" {% if iface.enabled
+                  %}checked{% endif %}>
 
                 <!-- The switch track -->
                 <div class="relative w-20 h-8 bg-slate-600 rounded-full transition-colors duration-300 ease-in-out peer-checked:bg-blue-600
@@ -153,40 +160,11 @@
     <div id="configuration" class="tab-content hidden bg-slate-800/70 border border-slate-700 rounded-2xl p-6">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold text-white">Running-Config</h2>
-        <button
+        <button onclick="download_btn"
           class="bg-pink-600 hover:bg-pink-500 text-white font-bold py-2 px-4 rounded-lg text-sm">Download</button>
       </div>
-      <pre class="bg-slate-900/50 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto"><code>!
-! Last configuration change at 17:15:20 GMT+7 Wed Oct 15 2025
-!
-version 15.1
-service timestamps debug datetime msec
-service timestamps log datetime msec
-no service password-encryption
-!
-hostname R1
-!
-boot-start-marker
-boot-end-marker
-!
-no aaa new-model
-!
-!
-ip cef
-!
-interface GigabitEthernet0/0
- description WAN Interface
- ip address 10.0.0.1 255.255.255.0
- duplex auto
- speed auto
-!
-interface GigabitEthernet0/1
- description LAN Interface
- ip address 192.168.1.1 255.255.255.0
- duplex auto
- speed auto
-!
-end</code></pre>
+      <pre
+        class="bg-slate-900/50 rounded-lg p-4 font-mono text-sm text-slate-300 overflow-x-auto"><code>{{ config }}</code></pre>
     </div>
 
     <!-- Connection Test Panel -->
@@ -251,5 +229,97 @@ end</code></pre>
       });
     });
   });
+
+  // Download Configuration Button
+  document.addEventListener('DOMContentLoaded', () => {
+    const downloadBtn = document.querySelector('button:has(+ pre)') ||
+      Array.from(document.querySelectorAll('button')).find(btn => btn.textContent.includes('Download'));
+
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', async () => {
+        const ip = "{{ ip }}";
+
+        try {
+          const response = await fetch(`/download_config/${ip}`);
+          const data = await response.json();
+
+          if (data.status === 'ok') {
+            // Create a blob from the config text
+            const blob = new Blob([data.config], { type: 'text/plain' });
+
+            // Create a temporary download link
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = data.filename;
+
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up the URL object
+            window.URL.revokeObjectURL(url);
+
+            console.log(`Downloaded: ${data.filename}`);
+          } else {
+            alert(`Error: ${data.message}`);
+          }
+        } catch (error) {
+          console.error('Error downloading config:', error);
+          alert('Failed to download configuration');
+        }
+      });
+    }
+    const deviceIp = "{{ ip }}";
+
+    // Find the save button
+    const saveBtn = document.getElementById('save-changes-btn');
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        console.log("Save button clicked. Gathering changes...");
+
+        // Find all the toggle switches
+        const toggles = document.querySelectorAll('.peer[data-iface-name]');
+
+        const updates = [];
+        toggles.forEach(toggle => {
+          updates.push({
+            name: toggle.getAttribute('data-iface-name'), // Get name from data-attribute
+            enabled: toggle.checked                     // Get current state (true/false)
+          });
+        });
+
+        console.log("Sending updates:", updates);
+
+        try {
+          // Send the entire 'updates' array to your new Flask route
+          const response = await fetch(`/manage/${deviceIp}/update_interfaces`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ interfaces: updates })
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            alert('Changes saved successfully!');
+            console.log(result.message);
+          } else {
+            alert('Error saving changes: ' + result.message);
+            console.error(result.message);
+          }
+        } catch (error) {
+          alert('A network error occurred. Please try again.');
+          console.error('Fetch error:', error);
+        }
+      });
+    }
+  });
+
+
 </script>
 {% endblock %}
