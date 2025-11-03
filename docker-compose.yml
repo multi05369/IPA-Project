@@ -15,6 +15,7 @@ services:
       DB_NAME: "${DB_NAME}"
     networks:
       - app-net
+
   scheduler:
     build: ./scheduler
     container_name: ipa-scheduler
@@ -34,6 +35,8 @@ services:
       - app-net
   rabbitmq:
     image: rabbitmq:3-management
+    depends_on:
+      - mongo
     ports:
       - "15672:15672"
       - "5672:5672"
