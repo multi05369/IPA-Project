@@ -1,0 +1,12 @@
+---
+- name: Show CDP Neighbor
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Run show cdp neighbor
+      cisco.ios.ios_command:
+        commands: show cdp neighbor
+      register: result
+    - name: Print output
+      debug:
+        var: result.stdout_lines
