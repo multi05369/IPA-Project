@@ -5,7 +5,9 @@ from bson import json_util
 from producer import produce
 from database import get_router_info
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 def scheduler():
 

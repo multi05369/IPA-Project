@@ -1,4 +1,6 @@
 import re
+
+
 def parse_show_version_to_json(text: str):
     """
     Parse the output of 'show version' into a structured dict as specified.
@@ -23,14 +25,16 @@ def parse_show_version_to_json(text: str):
         "serial": [],
         "config_register": "",
         "mac_address": [],
-        "restarted": ""
+        "restarted": "",
     }
     lines = text.splitlines()
     # Patterns for extraction
     version_re = re.compile(r"Version ([\d.]+)\(([^)]+)\), RELEASE SOFTWARE.*")
     version_alt_re = re.compile(r"Version ([\d.]+), RELEASE SOFTWARE \(([^)]+)\)")
     hostname_re = re.compile(r"^([\w-]+) uptime is (.+)")
-    uptime_re = re.compile(r"(\d+) years, (\d+) weeks, (\d+) days, (\d+) hours, (\d+) minutes")
+    uptime_re = re.compile(
+        r"(\d+) years, (\d+) weeks, (\d+) days, (\d+) hours, (\d+) minutes"
+    )
     uptime_simple_re = re.compile(r"(\d+) hours, (\d+) minutes")
     image_re = re.compile(r"System image file is \"(.+?)\"")
     hardware_re = re.compile(r"^cisco (\S+).+processor")
@@ -106,6 +110,7 @@ def parse_show_version_to_json(text: str):
                 result["mac_address"].append(mac)
     return [result]
 
+
 import pika
 import json
 import os
@@ -115,6 +120,7 @@ import database as db
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 def iso_utc():
     return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
@@ -147,7 +153,6 @@ def _to_text_from_stdout_lines(val):
     return str(val)
 
 
-
 def crop_show_ip_int_brief(text: str) -> str:
     """Return only the IOS table starting at the 'Interface' header.
 
@@ -158,13 +163,13 @@ def crop_show_ip_int_brief(text: str) -> str:
     # Find first header line that starts with 'Interface'
     start_idx = None
     for i, ln in enumerate(lines):
-        if ln.strip().startswith('Interface'):
+        if ln.strip().startswith("Interface"):
             start_idx = i
             break
     if start_idx is None:
         # Try to find a line that contains the two first columns
         for i, ln in enumerate(lines):
-            if 'Interface' in ln and 'IP-Address' in ln:
+            if "Interface" in ln and "IP-Address" in ln:
                 start_idx = i
                 break
     if start_idx is None:
@@ -174,13 +179,12 @@ def crop_show_ip_int_brief(text: str) -> str:
     stop_idx = None
     for i, ln in enumerate(kept):
         t = ln.strip()
-        if t.endswith('#') or t.endswith('>'):
+        if t.endswith("#") or t.endswith(">"):
             stop_idx = i
             break
     if stop_idx is not None:
         kept = kept[:stop_idx]
     return "\n".join([ln.rstrip() for ln in kept]).strip()
-
 
 
 def parse_show_ip_int_brief_to_json(text: str):
@@ -195,15 +199,15 @@ def parse_show_ip_int_brief_to_json(text: str):
         return []
     # Find header line and column positions
     header = lines[0]
-    columns = [col.strip().lower().replace('-', '_') for col in header.split()]
+    columns = [col.strip().lower().replace("-", "_") for col in header.split()]
     # Map header names to expected keys
     col_map = {
-        'interface': 'interface',
-        'ip_address': 'ip_address',
-        'ip-address': 'ip_address',
-        'status': 'status',
-        'proto': 'proto',
-        'protocol': 'proto',
+        "interface": "interface",
+        "ip_address": "ip_address",
+        "ip-address": "ip_address",
+        "status": "status",
+        "proto": "proto",
+        "protocol": "proto",
     }
     # Find the indices for each expected column
     col_indices = []
@@ -217,25 +221,25 @@ def parse_show_ip_int_brief_to_json(text: str):
         # Split by whitespace, but keep 'administratively down' together
         parts = row.split()
         # Heuristic: if 'administratively' is present, join with next part
-        if 'administratively' in parts:
-            idx = parts.index('administratively')
-            if idx+1 < len(parts):
-                parts[idx] = 'administratively down'
-                del parts[idx+1]
+        if "administratively" in parts:
+            idx = parts.index("administratively")
+            if idx + 1 < len(parts):
+                parts[idx] = "administratively down"
+                del parts[idx + 1]
         # Only keep rows with at least 4 columns
         if len(parts) >= 4:
             # Skip header row or any row where interface is 'Interface'
-            if parts[0].lower() == 'interface':
+            if parts[0].lower() == "interface":
                 continue
             # Skip duplicates
             if parts[0] in seen_interfaces:
                 continue
             seen_interfaces.add(parts[0])
             entry = {
-                'interface': parts[0],
-                'ip_address': parts[1],
-                'status': parts[-2],
-                'proto': parts[-1],
+                "interface": parts[0],
+                "ip_address": parts[1],
+                "status": parts[-2],
+                "proto": parts[-1],
             }
             result.append(entry)
     return result
@@ -247,13 +251,12 @@ def normalize_output(command: str, text: str):
     For 'show version', return a list with one dict as specified.
     For others, return trimmed text.
     """
-    c = (command or '').lower().strip()
-    if 'show ip interface brief' in c:
+    c = (command or "").lower().strip()
+    if "show ip interface brief" in c:
         return parse_show_ip_int_brief_to_json(text)
-    if 'show version' in c:
+    if "show version" in c:
         return parse_show_version_to_json(text)
-    return (text or '').strip()
-
+    return (text or "").strip()
 
 
 def get_playbooks():
@@ -264,14 +267,14 @@ def get_playbooks():
     }
 
 
-
-
 def run_ansible_playbook(playbook, inventory, extra_vars=None):
     cmd = [
         "ansible-playbook",
         playbook,
-        "-i", inventory,
-        "-e", f"ansible_python_interpreter=/usr/local/bin/python3"
+        "-i",
+        inventory,
+        "-e",
+        f"ansible_python_interpreter=/usr/local/bin/python3",
     ]
     if extra_vars:
         for k, v in extra_vars.items():
@@ -287,12 +290,12 @@ def run_ansible_playbook(playbook, inventory, extra_vars=None):
         # Disable host key checking for testing/dev environments (optional)
         env.setdefault("ANSIBLE_HOST_KEY_CHECKING", "False")
 
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, env=env)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=120, env=env
+        )
         return result.returncode, result.stdout, result.stderr
     except Exception as e:
         return 1, "", str(e)
-
-
 
 
 def parse_ansible_output(ansible_stdout):
@@ -302,7 +305,7 @@ def parse_ansible_output(ansible_stdout):
         if not s:
             return ""
         # Find the first JSON object in the output (ansible may prefix with text)
-        first_brace = s.find('{')
+        first_brace = s.find("{")
         if first_brace != -1:
             try:
                 json_text = s[first_brace:]
@@ -310,21 +313,27 @@ def parse_ansible_output(ansible_stdout):
                 # Walk parsed structure to extract stdout_lines where available
                 outputs = []
 
-                plays = parsed.get('plays', []) if isinstance(parsed, dict) else []
+                plays = parsed.get("plays", []) if isinstance(parsed, dict) else []
                 for play in plays:
-                    tasks = play.get('tasks', [])
+                    tasks = play.get("tasks", [])
                     for task in tasks:
-                        for host, result in task.get('hosts', {}).items():
+                        for host, result in task.get("hosts", {}).items():
                             # result may contain 'stdout' or 'stdout_lines' or 'msg'
                             if isinstance(result, dict):
-                                if 'stdout' in result and result['stdout']:
-                                    outputs.append(_to_text_from_stdout(result['stdout']))
-                                if 'stdout_lines' in result and result['stdout_lines']:
-                                    outputs.append(_to_text_from_stdout_lines(result['stdout_lines']))
-                                if 'msg' in result and result['msg']:
-                                    outputs.append(str(result['msg']))
+                                if "stdout" in result and result["stdout"]:
+                                    outputs.append(
+                                        _to_text_from_stdout(result["stdout"])
+                                    )
+                                if "stdout_lines" in result and result["stdout_lines"]:
+                                    outputs.append(
+                                        _to_text_from_stdout_lines(
+                                            result["stdout_lines"]
+                                        )
+                                    )
+                                if "msg" in result and result["msg"]:
+                                    outputs.append(str(result["msg"]))
                 if outputs:
-                    return '\n---\n'.join(outputs)
+                    return "\n---\n".join(outputs)
             except Exception:
                 # fall back to text parsing below
                 pass
@@ -334,14 +343,14 @@ def parse_ansible_output(ansible_stdout):
         output_lines = []
         capture = False
         for line in lines:
-            if line.strip().startswith('ok:') or line.strip().startswith('TASK ['):
+            if line.strip().startswith("ok:") or line.strip().startswith("TASK ["):
                 capture = True
                 output_lines = []
             elif capture:
-                if line.strip() == '':
+                if line.strip() == "":
                     break
                 output_lines.append(line)
-        output = '\n'.join(output_lines).strip()
+        output = "\n".join(output_lines).strip()
         # If we couldn't extract any structured output, fall back to returning
         # the raw ansible stdout so the caller always has something to store.
         if output:
@@ -351,8 +360,6 @@ def parse_ansible_output(ansible_stdout):
         return ansible_stdout.strip()
     except Exception:
         return ansible_stdout
-
-
 
 
 def save_command_output(ip, command, output, success=True, error=None):
@@ -400,7 +407,13 @@ def process_job(ip, username, password, device_type="cisco_ios"):
         for command_text, key in commands:
             playbook_file = playbooks.get(key)
             if not playbook_file:
-                save_command_output(ip, command_text, "", success=False, error=f"Playbook key '{key}' not found")
+                save_command_output(
+                    ip,
+                    command_text,
+                    "",
+                    success=False,
+                    error=f"Playbook key '{key}' not found",
+                )
                 continue
 
             rc, stdout, stderr = run_ansible_playbook(playbook_file, inventory_path)
@@ -413,10 +426,15 @@ def process_job(ip, username, password, device_type="cisco_ios"):
                 normalized = normalize_output(command_text, parsed)
                 save_command_output(ip, command_text, normalized, success=True)
             else:
-                err_text = stderr or stdout or "ansible-playbook returned non-zero exit code"
+                err_text = (
+                    stderr or stdout or "ansible-playbook returned non-zero exit code"
+                )
                 save_command_output(ip, command_text, "", success=False, error=err_text)
     except Exception as e:
-        save_command_output(ip, "show ip interface brief", "", success=False, error=str(e))
+        save_command_output(
+            ip, "show ip interface brief", "", success=False, error=str(e)
+        )
+
 
 def callback(ch, method, properties, body):
     try:
@@ -434,6 +452,7 @@ def callback(ch, method, properties, body):
 
     except Exception as e:
         print("Failed to process message:", e)
+
 
 def main():
     # Support both styles of env vars and prefer the ones used in docker-compose
@@ -467,6 +486,6 @@ def main():
     print(f"Waiting for messages on queue '{queue_name}'...")
     channel.start_consuming()
 
+
 if __name__ == "__main__":
     main()
-
