@@ -271,7 +271,7 @@ def run_ansible_playbook(playbook, inventory, extra_vars=None):
         "-i",
         inventory,
         "-e",
-        f"ansible_python_interpreter=/usr/local/bin/python3",
+        "ansible_python_interpreter=/usr/local/bin/python3",
     ]
     if extra_vars:
         for k, v in extra_vars.items():
