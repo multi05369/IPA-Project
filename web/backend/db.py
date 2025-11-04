@@ -68,7 +68,7 @@ def get_all_devices():
 
 def get_device_info(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"device_type": 1, "hostname": 1})
+    result = db['devices'].find_one({"ip": ip})  # Return all fields
     return result
 
 

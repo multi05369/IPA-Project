@@ -308,6 +308,36 @@
           if (response.ok) {
             alert('Changes saved successfully!');
             console.log(result.message);
+            // Update UI with real interface status from backend
+            if (result.interfaces && Array.isArray(result.interfaces)) {
+              result.interfaces.forEach(iface => {
+                // Find the toggle for this interface
+                const toggle = document.querySelector(`.peer[data-iface-name="${iface.name}"]`);
+                if (toggle) {
+                  toggle.checked = !!iface.enabled;
+                  // Update status text and color
+                  const row = toggle.closest('tr');
+                  if (row) {
+                    const statusCell = row.querySelector('td:nth-child(2) span');
+                    if (statusCell) {
+                      if (iface.status && iface.status.toLowerCase() === 'up') {
+                        statusCell.textContent = 'Online';
+                        statusCell.classList.remove('text-slate-500');
+                        statusCell.classList.add('text-green-400');
+                        const dot = statusCell.querySelector('span');
+                        if (dot) dot.className = 'h-2 w-2 rounded-full bg-green-400';
+                      } else {
+                        statusCell.textContent = 'Offline';
+                        statusCell.classList.remove('text-green-400');
+                        statusCell.classList.add('text-slate-500');
+                        const dot = statusCell.querySelector('span');
+                        if (dot) dot.className = 'h-2 w-2 rounded-full bg-slate-500';
+                      }
+                    }
+                  }
+                }
+              });
+            }
           } else {
             alert('Error saving changes: ' + result.message);
             console.error(result.message);
