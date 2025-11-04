@@ -106,6 +106,7 @@ def parse_show_version_to_json(text: str):
                 result["mac_address"].append(mac)
     return [result]
 
+
 import pika
 import json
 import os
@@ -113,6 +114,7 @@ import time
 import subprocess
 import database as db
 from dotenv import load_dotenv
+from netmiko import ConnectHandler
 
 load_dotenv()
 
@@ -422,16 +424,76 @@ def callback(ch, method, properties, body):
     try:
         data = json.loads(body)
         print("Decoded JSON:", data)
-        ip = data.get("ip_address") or data.get("ip")
-        username = data.get("username")
-        password = data.get("password")
-        device_type = "cisco_ios"
-
-        if not ip or not username or not password:
-            raise ValueError("ip/username/password missing in message")
-
-        process_job(ip, username, password, device_type)
-
+        job_type = data.get("job_type")
+        if job_type == "update_interface_state":
+            # New microservice job: update interface state
+            ip = data.get("ip")
+            updates = data.get("updates", [])
+            # Fetch device credentials from DB
+            from pymongo import MongoClient
+            mongo_uri = os.getenv("MONGODB_URI")
+            db_name = os.getenv("DB_NAME")
+            client = MongoClient(mongo_uri)
+            device = client[db_name]["devices"].find_one({"ip": ip})
+            if not device:
+                print(f"Device {ip} not found in DB.")
+                return
+            netmiko_device = {
+                "device_type": "cisco_ios",  # Force correct Netmiko type for Cisco routers
+                "host": device.get("ip"),
+                "username": device.get("username"),
+                "password": device.get("password"),
+            }
+            config_commands = []
+            for update in updates:
+                iface_name = update.get("name")
+                is_enabled = update.get("enabled")
+                config_commands.append(f"interface {iface_name}")
+                if is_enabled:
+                    config_commands.append("no shutdown")
+                else:
+                    config_commands.append("shutdown")
+            try:
+                with ConnectHandler(**netmiko_device) as conn:
+                    conn.send_config_set(config_commands)
+                    interfaces_output = conn.send_command("show ip interface brief", use_textfsm=True)
+                # Parse and update DB with real status
+                real_status = []
+                if isinstance(interfaces_output, list):
+                    for iface in interfaces_output:
+                        real_status.append({
+                            'name': iface.get('intf', iface.get('interface', '')),
+                            'status': iface.get('status', ''),
+                            'ip': iface.get('ipaddr', iface.get('ip_address', '')),
+                            'enabled': iface.get('status', '').lower() == 'up',
+                        })
+                    # Update DB with real status
+                    from database import set_device_info
+                    # Optionally update the interfaces array in devices
+                    client[db_name]["devices"].update_one(
+                        {"ip": ip},
+                        {"$set": {"interfaces": real_status}}
+                    )
+                else:
+                    # Fallback: just update with requested states
+                    client[db_name]["devices"].update_one(
+                        {"ip": ip},
+                        {"$set": {"interfaces": updates}}
+                    )
+                print(f"Interface update applied for {ip}.")
+            except Exception as e:
+                print(f"Error applying interface config for {ip}: {e}")
+            finally:
+                client.close()
+        else:
+            # Default: legacy job (check_interfaces, etc.)
+            ip = data.get("ip_address") or data.get("ip")
+            username = data.get("username")
+            password = data.get("password")
+            device_type = "cisco_ios"
+            if not ip or not username or not password:
+                raise ValueError("ip/username/password missing in message")
+            process_job(ip, username, password, device_type)
     except Exception as e:
         print("Failed to process message:", e)
 

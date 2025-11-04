@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, flash, jsonify
-from netmiko import ConnectHandler
 import os
 import db
+import producer
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -70,79 +70,26 @@ def manage_device(ip):
         running_configs=running_configs
     )
 
-# Save Changes button route
-# ADD THIS NEW ROUTE
+
+# Save Changes button route (microservice version)
 @app.route("/manage/<ip>/update_interfaces", methods=["POST"])
 def update_interfaces(ip):
-    # Get the list of updates from the frontend
-    # e.g., [ {"name": "eth01", "enabled": True}, ... ]
     updates = request.json.get("interfaces", [])
-    
-    # 1. Get device credentials from DB
-    # (Using get_router_info as it's defined in your db.py)
     device = db.get_device_info(ip)
     if not device:
         return jsonify({"status": "error", "message": "Device not found"}), 404
 
-    # Prepare Netmiko-compatible device dictionary
-    host = device.get('ip') or device.get('host')
-    if not host:
-        return jsonify({"status": "error", "message": "Device IP/host not found in database."}), 400
-
-    netmiko_device = {
-        "device_type": "cisco_ios", # You should make this dynamic from device.get('device_type')
-        "host": host,
-        "username": device.get('username'),
-        "password": device.get('password'),
-    }
-
-    # 2. Build the configuration commands
-    config_commands = []
-    for update in updates:
-        iface_name = update.get('name')
-        is_enabled = update.get('enabled')
-        
-        config_commands.append(f"interface {iface_name}")
-        if is_enabled:
-            config_commands.append("no shutdown")
-        else:
-            config_commands.append("shutdown")
-
+    # Publish job to RabbitMQ for the worker to process
     try:
-        # 3. Apply changes to the actual device
-        with ConnectHandler(**netmiko_device) as conn:
-            conn.send_config_set(config_commands)
-            # Fetch real interface status after config
-            interfaces_output = conn.send_command("show ip interface brief", use_textfsm=True)
-
-        # Parse and update DB with real status
-        # interfaces_output is a list of dicts if TextFSM template is available
-        real_status = []
-        if isinstance(interfaces_output, list):
-            for iface in interfaces_output:
-                real_status.append({
-                    'name': iface.get('intf', iface.get('interface', '')),
-                    'status': iface.get('status', ''),
-                    'ip': iface.get('ipaddr', iface.get('ip_address', '')),
-                    'enabled': iface.get('status', '').lower() == 'up',
-                })
-            # Optionally update DB with real status (if you have a function for this)
-            if hasattr(db, 'update_interface_statuses'):
-                db.update_interface_statuses(ip, real_status)
-        else:
-            # Fallback: just update with requested states
-            db.update_interface_statuses(ip, updates)
-
+        producer.publish_interface_update_job(ip, updates)
+        # Optionally, update DB with pending state or just acknowledge
         return jsonify({
-            "status": "success",
-            "message": "Changes applied and saved.",
-            "interfaces": real_status if real_status else updates
+            "status": "pending",
+            "message": "Interface update job submitted. Changes will be applied by the worker service."
         })
-
     except Exception as e:
-        print(f"Error applying interface config: {e}")
+        print(f"Error publishing interface update job: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
-# End of Save Changes button route
 
 # Download the configuration file
 @app.route('/download_config/<ip>', methods=['GET'])

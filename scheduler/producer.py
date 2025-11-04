@@ -8,9 +8,6 @@ def produce(host, body):
 
     rabbitmq_user = os.getenv("RABBITMQ_DEFAULT_USER")
     rabbitmq_pass = os.getenv("RABBITMQ_DEFAULT_PASS")
-    print(rabbitmq_user)
-    print(rabbitmq_pass)
-
     credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_pass)
     parameters = pika.ConnectionParameters(host, credentials=credentials)
     connection = pika.BlockingConnection(parameters)

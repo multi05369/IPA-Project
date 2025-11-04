@@ -9,7 +9,7 @@ load_dotenv()
 
 def scheduler():
 
-    INTERVAL = 1.0
+    INTERVAL = 5.0
     next_run = time.monotonic()
     count = 0
     host = os.getenv("RABBITMQ_HOST")
@@ -20,7 +20,6 @@ def scheduler():
         ms = int((now % 1) * 1000)
         now_str_with_ms = f"{now_str}.{ms:03d}"
         print(f"[{now_str_with_ms}] run #{count}")
-        print(host)
         try:
             for data in get_router_info():
                 body_bytes = json_util.dumps(data).encode("utf-8")
