@@ -126,7 +126,6 @@ def get_latest_interface_status(ip):
         sort=[("time", -1)],
     )
     if result and "output" in result and isinstance(result["output"], list):
-        # Convert to expected frontend format: list of dicts with keys name, status, ip, vrf, enabled
         interfaces = []
         for iface in result["output"]:
             interfaces.append(

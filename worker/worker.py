@@ -1,4 +1,13 @@
 import re
+import pika
+import json
+import os
+import time
+import subprocess
+import database as db
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def parse_show_version_to_json(text: str):
@@ -36,7 +45,6 @@ def parse_show_version_to_json(text: str):
         r"(\d+) years, (\d+) weeks, (\d+) days, (\d+) hours, (\d+) minutes"
     )
     uptime_simple_re = re.compile(r"(\d+) hours, (\d+) minutes")
-    image_re = re.compile(r"System image file is \"(.+?)\"")
     hardware_re = re.compile(r"^cisco (\S+).+processor")
     serial_re = re.compile(r"Processor board ID ([\w\d]+)")
     config_reg_re = re.compile(r"Configuration register is (\S+)")
@@ -109,17 +117,6 @@ def parse_show_version_to_json(text: str):
             if mac not in result["mac_address"]:
                 result["mac_address"].append(mac)
     return [result]
-
-
-import pika
-import json
-import os
-import time
-import subprocess
-import database as db
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 def iso_utc():
