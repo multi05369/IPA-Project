@@ -485,6 +485,96 @@ def callback(ch, method, properties, body):
                 print(f"Error applying interface config for {ip}: {e}")
             finally:
                 client.close()
+        elif job_type == "ping_device":
+            # New microservice job: run ping from device to target
+            ip = data.get("ip")
+            target = data.get("target")
+            if not ip or not target:
+                print("ping_device job missing ip/target")
+                return
+            # Fetch device credentials from DB
+            from pymongo import MongoClient
+            mongo_uri = os.getenv("MONGODB_URI")
+            db_name = os.getenv("DB_NAME")
+            client = MongoClient(mongo_uri)
+            try:
+                device = client[db_name]["devices"].find_one({"ip": ip})
+                if not device:
+                    print(f"Device {ip} not found in DB for ping.")
+                    return
+                netmiko_device = {
+                    "device_type": "cisco_ios",
+                    "host": device.get("ip"),
+                    "username": device.get("username"),
+                    "password": device.get("password"),
+                }
+                ping_cmd = f"ping {target}"
+                ping_output = None
+                success = False
+                error = None
+                # First try Netmiko
+                try:
+                    with ConnectHandler(**netmiko_device) as conn:
+                        ping_output = conn.send_command(ping_cmd)
+                        success = True if ping_output else False
+                except Exception as e:
+                    error = f"Netmiko ping failed: {e}"
+                    # Fallback to Ansible if Netmiko fails
+                    try:
+                        # Build temp inventory
+                        inventory_path = f"/tmp/inventory_{ip.replace('.', '_')}"
+                        inventory_content = (
+                            "[routers]\n"
+                            f"{ip} ansible_host={ip} ansible_user={device.get('username')} ansible_password={device.get('password')} "
+                            "ansible_network_os=cisco.ios.ios ansible_connection=network_cli\n"
+                        )
+                        with open(inventory_path, "w") as f:
+                            f.write(inventory_content)
+                        # Build temp playbook
+                        playbook_path = f"/tmp/ping_{ip.replace('.', '_')}.yml"
+                        playbook_content = (
+                            "---\n"
+                            "- name: Ping from device\n"
+                            "  hosts: routers\n"
+                            "  gather_facts: no\n"
+                            "  tasks:\n"
+                            "    - name: Run ping\n"
+                            "      cisco.ios.ios_command:\n"
+                            "        commands: \n"
+                            "          - \"ping {{ ping_target }}\"\n"
+                            "      register: result\n"
+                            "    - name: Print output\n"
+                            "      debug:\n"
+                            "        var: result.stdout_lines\n"
+                        )
+                        with open(playbook_path, "w") as f:
+                            f.write(playbook_content)
+                        rc, stdout, stderr = run_ansible_playbook(
+                            playbook_path, inventory_path, extra_vars={"ping_target": target}
+                        )
+                        if rc == 0:
+                            parsed = parse_ansible_output(stdout)
+                            ping_output = parsed or (stdout.strip() or stderr.strip())
+                            success = True if ping_output else False
+                        else:
+                            err_text = stderr or stdout or "ansible-playbook returned non-zero exit code"
+                            error = f"Ansible ping failed: {err_text}"
+                    except Exception as e2:
+                        error = f"Ansible ping error: {e2}"
+                # Save ping result to dedicated 'pings' collection
+                from database import set_ping_result
+                set_ping_result({
+                    "ip_address": ip,
+                    "target_ip": target,
+                    "command": ping_cmd,
+                    "output": ping_output or (error or ""),
+                    "success": bool(success),
+                    "time": iso_utc(),
+                    "error": error,
+                })
+                print(f"Ping job stored for {ip} -> {target} (success={success})")
+            finally:
+                client.close()
         else:
             # Default: legacy job (check_interfaces, etc.)
             ip = data.get("ip_address") or data.get("ip")

@@ -115,35 +115,53 @@ def download_config(ip):
         print(f"Error downloading config: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# Ping endpoint: POST /manage/<ip>/ping
+# Ping endpoints (microservice flow)
 @app.route('/manage/<ip>/ping', methods=['POST'])
 def ping_from_router(ip):
-    data = request.get_json()
+    """
+    Enqueue a ping job for the worker and return pending immediately.
+    Body: {"target_ip": "<ip>"}
+    """
+    data = request.get_json(silent=True) or {}
     target_ip = data.get('target_ip')
     if not target_ip:
         return jsonify({'status': 'error', 'message': 'No target IP provided.'}), 400
 
+    # Verify device exists
     device = db.get_device_info(ip)
-    host = device.get('ip') or device.get('host')
-    if not host:
-        return jsonify({'status': 'error', 'message': 'Device IP/host not found in database.'}), 400
+    if not device:
+        return jsonify({'status': 'error', 'message': 'Device not found.'}), 404
 
-    netmiko_device = {
-        'device_type': 'cisco_ios',
-        'host': host,
-        'username': device.get('username'),
-        'password': device.get('password'),
-    }
     try:
-        with ConnectHandler(**netmiko_device) as conn:
-            ping_cmd = f'ping {target_ip}'
-            output = conn.send_command(ping_cmd)
-        # Save to MongoDB outputs collection
-        db.save_command_output(ip, ping_cmd, output, success=True)
-        return jsonify({'status': 'ok', 'output': output})
+        # Publish job to RabbitMQ for the worker to process
+        producer.publish_ping_job(ip, target_ip)
+        return jsonify({'status': 'pending', 'message': 'Ping job submitted.'})
     except Exception as e:
-        db.save_command_output(ip, f'ping {target_ip}', str(e), success=False)
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/manage/<ip>/ping/latest')
+def get_latest_ping(ip):
+    """
+    Return the latest ping result for this device and target.
+    Query param: target_ip=<ip>
+    """
+    target_ip = request.args.get('target_ip')
+    if not target_ip:
+        return jsonify({'status': 'error', 'message': 'Missing target_ip parameter'}), 400
+    doc = db.get_latest_ping(ip, target_ip)
+    if not doc:
+        return jsonify({'status': 'not-found'}), 404
+    # shape a clean response
+    resp = {
+        'status': 'ok' if doc.get('success') else 'error',
+        'ip_address': doc.get('ip_address'),
+        'target_ip': doc.get('target_ip'),
+        'command': doc.get('command'),
+        'output': doc.get('output'),
+        'time': doc.get('time').isoformat() if hasattr(doc.get('time'), 'isoformat') else doc.get('time'),
+    }
+    return jsonify(resp)
 
 
 if __name__ == '__main__':

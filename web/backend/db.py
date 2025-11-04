@@ -164,3 +164,20 @@ def update_interface_statuses(ip, updates):
     except Exception as e:
         print(f"Error updating interface statuses in DB: {e}")
         return False
+
+
+def get_latest_ping(ip: str, target_ip: str):
+    """
+    Fetch the latest ping result for a given device IP and target IP from the 'pings' collection.
+    Returns a dict with keys: command, output, success, time (if available), else None.
+    """
+    db = get_db()
+    try:
+        result = db['pings'].find_one(
+            {"ip_address": ip, "target_ip": target_ip},
+            sort=[("time", -1)]
+        )
+        return result
+    except Exception as e:
+        print(f"Error fetching latest ping: {e}")
+        return None

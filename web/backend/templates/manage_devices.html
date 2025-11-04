@@ -195,6 +195,28 @@
       const runBtn = pingPanel.querySelector('button');
       const resultBox = pingPanel.querySelector('pre');
       const deviceIp = "{{ ip }}";
+
+      async function pollPingResult(deviceIp, targetIp, attempts = 10, intervalMs = 2000) {
+        for (let i = 0; i < attempts; i++) {
+          try {
+            const res = await fetch(`/manage/${deviceIp}/ping/latest?target_ip=${encodeURIComponent(targetIp)}`);
+            if (res.ok) {
+              const payload = await res.json();
+              if (payload.status === 'ok') {
+                return { done: true, output: payload.output };
+              }
+              if (payload.status === 'error') {
+                return { done: true, output: payload.output || 'Ping failed.' };
+              }
+            }
+          } catch (e) {
+            // ignore and retry
+          }
+          await new Promise(r => setTimeout(r, intervalMs));
+        }
+        return { done: false, output: null };
+      }
+
       if (runBtn && input && resultBox) {
         runBtn.addEventListener('click', async () => {
           const targetIp = input.value.trim();
@@ -202,7 +224,7 @@
             resultBox.textContent = 'Please enter an IP address.';
             return;
           }
-          resultBox.textContent = 'Pinging...';
+          resultBox.textContent = 'Submitting ping job...';
           try {
             const response = await fetch(`/manage/${deviceIp}/ping`, {
               method: 'POST',
@@ -210,10 +232,16 @@
               body: JSON.stringify({ target_ip: targetIp })
             });
             const data = await response.json();
-            if (data.status === 'ok') {
-              resultBox.textContent = data.output;
+            if (response.ok && data.status === 'pending') {
+              resultBox.textContent = 'Ping job queued. Waiting for result...';
+              const result = await pollPingResult(deviceIp, targetIp, 10, 2000);
+              if (result.done) {
+                resultBox.textContent = result.output || 'No output.';
+              } else {
+                resultBox.textContent = 'Timed out waiting for ping result. Try again.';
+              }
             } else {
-              resultBox.textContent = 'Error: ' + (data.message || 'Unknown error');
+              resultBox.textContent = 'Error: ' + (data.message || 'Failed to submit job');
             }
           } catch (err) {
             resultBox.textContent = 'Network error.';

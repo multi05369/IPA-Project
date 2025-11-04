@@ -33,3 +33,40 @@ def publish_interface_update_job(ip, updates):
     body = json.dumps(job).encode("utf-8")
     channel.basic_publish(exchange="jobs", routing_key="update_interface_state", body=body)
     connection.close()
+
+
+def publish_ping_job(ip: str, target: str):
+    """
+    Publishes a ping job to RabbitMQ for the worker to process.
+    Args:
+        ip (str): Device IP address to execute the ping from (the router)
+        target (str): Destination IP address to ping
+    Message format:
+        {
+          "job_type": "ping_device",
+          "ip": "<device-ip>",
+          "target": "<target-ip>"
+        }
+    """
+    rabbitmq_user = os.getenv("RABBITMQ_USER") or os.getenv("RABBITMQ_DEFAULT_USER")
+    rabbitmq_pass = os.getenv("RABBITMQ_PASSWORD") or os.getenv("RABBITMQ_DEFAULT_PASS")
+    rabbitmq_host = os.getenv("RABBITMQ_HOST", "rabbitmq")
+    rabbitmq_port = int(os.getenv("RABBITMQ_PORT", 5672))
+
+    credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_pass)
+    parameters = pika.ConnectionParameters(rabbitmq_host, rabbitmq_port, '/', credentials)
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+
+    channel.exchange_declare(exchange="jobs", exchange_type="direct")
+    channel.queue_declare(queue="router_jobs")
+    channel.queue_bind(queue="router_jobs", exchange="jobs", routing_key="ping_device")
+
+    job = {
+        "job_type": "ping_device",
+        "ip": ip,
+        "target": target,
+    }
+    body = json.dumps(job).encode("utf-8")
+    channel.basic_publish(exchange="jobs", routing_key="ping_device", body=body)
+    connection.close()
