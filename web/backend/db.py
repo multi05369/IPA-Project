@@ -1,9 +1,20 @@
+import datetime
 from flask import g
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+# Save command output to outputs collection
+def save_command_output(ip, command, output, success=True):
+    db = get_db()
+    db['outputs'].insert_one({
+        'ip_address': ip,
+        'command': command,
+        'output': output,
+        'success': success,
+        'time': datetime.datetime.utcnow()
+    })
 
 def get_db():
     if 'db' not in g:
