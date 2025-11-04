@@ -461,7 +461,7 @@ def main():
         try:
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
-                    host=os.getenv("RABBITMQ_HOST", "localhost"),
+                    host="172.16.1.140",
                     port=int(os.getenv("RABBITMQ_PORT", "5672")),
                     credentials=credentials,
                 )
