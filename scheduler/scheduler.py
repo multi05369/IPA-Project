@@ -11,7 +11,7 @@ load_dotenv()
 
 def scheduler():
 
-    INTERVAL = 1.0
+    INTERVAL = 90
     next_run = time.monotonic()
     count = 0
     host = os.getenv("RABBITMQ_HOST")
