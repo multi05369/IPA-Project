@@ -80,14 +80,18 @@ def update_interfaces(ip):
     
     # 1. Get device credentials from DB
     # (Using get_router_info as it's defined in your db.py)
-    device = db.device(ip) 
+    device = db.get_device_info(ip)
     if not device:
         return jsonify({"status": "error", "message": "Device not found"}), 404
 
     # Prepare Netmiko-compatible device dictionary
+    host = device.get('ip') or device.get('host')
+    if not host:
+        return jsonify({"status": "error", "message": "Device IP/host not found in database."}), 400
+
     netmiko_device = {
         "device_type": "cisco_ios", # You should make this dynamic from device.get('device_type')
-        "host": device.get('ip'),
+        "host": host,
         "username": device.get('username'),
         "password": device.get('password'),
     }
@@ -108,11 +112,32 @@ def update_interfaces(ip):
         # 3. Apply changes to the actual device
         with ConnectHandler(**netmiko_device) as conn:
             conn.send_config_set(config_commands)
-        
-        # 4. Save the new states to the database
-        db.update_interface_statuses(ip, updates)
-        
-        return jsonify({"status": "success", "message": "Changes applied and saved."})
+            # Fetch real interface status after config
+            interfaces_output = conn.send_command("show ip interface brief", use_textfsm=True)
+
+        # Parse and update DB with real status
+        # interfaces_output is a list of dicts if TextFSM template is available
+        real_status = []
+        if isinstance(interfaces_output, list):
+            for iface in interfaces_output:
+                real_status.append({
+                    'name': iface.get('intf', iface.get('interface', '')),
+                    'status': iface.get('status', ''),
+                    'ip': iface.get('ipaddr', iface.get('ip_address', '')),
+                    'enabled': iface.get('status', '').lower() == 'up',
+                })
+            # Optionally update DB with real status (if you have a function for this)
+            if hasattr(db, 'update_interface_statuses'):
+                db.update_interface_statuses(ip, real_status)
+        else:
+            # Fallback: just update with requested states
+            db.update_interface_statuses(ip, updates)
+
+        return jsonify({
+            "status": "success",
+            "message": "Changes applied and saved.",
+            "interfaces": real_status if real_status else updates
+        })
 
     except Exception as e:
         print(f"Error applying interface config: {e}")
@@ -143,20 +168,35 @@ def download_config(ip):
         print(f"Error downloading config: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-# # This is for rabbit MQ connection to everytime you press refresh config button
-# @app.route("/interface/<ip>/<iface>/toggle", methods=["POST"])
-# def toggle_interface(ip, iface):
-#     enable = request.json.get("enable", True)
-#     device = db.get_device_by_ip(ip)
-#     conn = ConnectHandler(**device)
+# Ping endpoint: POST /manage/<ip>/ping
+@app.route('/manage/<ip>/ping', methods=['POST'])
+def ping_from_router(ip):
+    data = request.get_json()
+    target_ip = data.get('target_ip')
+    if not target_ip:
+        return jsonify({'status': 'error', 'message': 'No target IP provided.'}), 400
 
-#     if enable:
-#         conn.send_config_set([f"interface {iface}", "no shutdown"])
-#     else:
-#         conn.send_config_set([f"interface {iface}", "shutdown"])
+    device = db.get_device_info(ip)
+    host = device.get('ip') or device.get('host')
+    if not host:
+        return jsonify({'status': 'error', 'message': 'Device IP/host not found in database.'}), 400
 
-#     conn.disconnect()
-#     return jsonify({"status": "ok"})
+    netmiko_device = {
+        'device_type': 'cisco_ios',
+        'host': host,
+        'username': device.get('username'),
+        'password': device.get('password'),
+    }
+    try:
+        with ConnectHandler(**netmiko_device) as conn:
+            ping_cmd = f'ping {target_ip}'
+            output = conn.send_command(ping_cmd)
+        # Save to MongoDB outputs collection
+        db.save_command_output(ip, ping_cmd, output, success=True)
+        return jsonify({'status': 'ok', 'output': output})
+    except Exception as e:
+        db.save_command_output(ip, f'ping {target_ip}', str(e), success=False)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
 if __name__ == '__main__':

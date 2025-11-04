@@ -1,0 +1,5 @@
+[devices]
+R1 ansible_host=172.16.31.1 ansible_user=admin ansible_password=cisco ansible_network_os=ios
+R2 ansible_host=172.16.31.2 ansible_user=admin ansible_password=cisco ansible_network_os=ios
+R3 ansible_host=172.16.31.3 ansible_user=admin ansible_password=cisco ansible_network_os=ios
+SW1 ansible_host=172.16.31.254 ansible_user=admin ansible_password=cisco ansible_network_os=ios

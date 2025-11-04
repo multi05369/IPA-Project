@@ -1,9 +1,20 @@
+import datetime
 from flask import g
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
+# Save command output to outputs collection
+def save_command_output(ip, command, output, success=True):
+    db = get_db()
+    db['outputs'].insert_one({
+        'ip_address': ip,
+        'command': command,
+        'output': output,
+        'success': success,
+        'time': datetime.datetime.utcnow()
+    })
 
 def get_db():
     if 'db' not in g:
@@ -68,19 +79,20 @@ def get_all_devices():
 
 def get_device_info(ip):
     db = get_db()
-    result = db['devices'].find_one({"ip": ip}, {"device_type": 1, "hostname": 1})
+    result = db['devices'].find_one({"ip": ip})  # Return all fields
     return result
 
 
 def get_latest_running_config(ip):
     db = get_db()
     try:
-        result = db['running_configs'].find_one(
-            {"ip": ip},
-            {"config": 1}
+        # Fetch latest output for 'show running-config' from outputs collection
+        result = db['outputs'].find_one(
+            {"ip_address": ip, "command": "show running-config", "success": True},
+            sort=[("time", -1)]
         )
-        if result and 'config' in result:
-            return result['config']
+        if result and 'output' in result:
+            return result['output']
         return "No configuration found"
     except Exception as e:
         print(f"Error fetching running config: {e}")
@@ -89,14 +101,37 @@ def get_latest_running_config(ip):
 
 def get_latest_device_details(ip):
     db = get_db()
-    result = db['device_details'].find_one({"ip": ip}, {"firmware": 1, "uptime": 1, "device_type": 1, "mac": 1, "model": 1, "firmware": 1})
-    return result if result else {}
+    # Fetch latest output for 'show version' from outputs collection
+    result = db['outputs'].find_one(
+        {"ip_address": ip, "command": "show version", "success": True},
+        sort=[("time", -1)]
+    )
+    if result and 'output' in result and isinstance(result['output'], list) and result['output']:
+        # Return the first dict in the output list (as per worker format)
+        return result['output'][0]
+    return {}
 
 
 def get_latest_interface_status(ip):
     db = get_db()
-    result = db['interface_status'].find_one({"ip_parent": ip}, {"interfaces": 1})
-    return result.get("interfaces", []) if result else []
+    # Fetch latest output for 'show ip interface brief' from outputs collection
+    result = db['outputs'].find_one(
+        {"ip_address": ip, "command": "show ip interface brief", "success": True},
+        sort=[("time", -1)]
+    )
+    if result and 'output' in result and isinstance(result['output'], list):
+        # Convert to expected frontend format: list of dicts with keys name, status, ip, vrf, enabled
+        interfaces = []
+        for iface in result['output']:
+            interfaces.append({
+                'name': iface.get('interface', ''),
+                'status': iface.get('status', ''),
+                'ip': iface.get('ip_address', ''),
+                'vrf': iface.get('vrf', ''),  # vrf may not exist
+                'enabled': iface.get('status', '').lower() == 'up',
+            })
+        return interfaces
+    return []
 
 
 def get_latest_vrf_details(ip):

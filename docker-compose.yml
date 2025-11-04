@@ -10,8 +10,45 @@ services:
       - mongo-data:/data/db
     env_file:
       - .env
+    environment:
+      MONGO_URI: "mongodb://admin:passwd@mongo:27017/ipa_project_db?authSource=admin"
+      DB_NAME: "${DB_NAME}"
     networks:
       - app-net
+
+  scheduler:
+    build: ./scheduler
+    container_name: ipa-scheduler
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: 1
+      MONGODB_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/"
+      DB_NAME: "ipa_project_db"
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_HOST: "rabbitmq"
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - app-net
+  rabbitmq:
+    image: rabbitmq:3-management
+    depends_on:
+      - mongo
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - app-net
+    env_file:
+      - .env
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
   web:
     build: ./web
     container_name: ipa-web-app
@@ -27,8 +64,28 @@ services:
     networks:
       - app-net
 
+      
+  worker:
+    build: ./worker
+    container_name: ipa-worker
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: 1
+      MONGODB_URI: "mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/"
+      DB_NAME: "ipa_project_db"
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_HOST: "rabbitmq"
+    depends_on:
+      - mongo
+      - rabbitmq
+    networks:
+      - app-net
+
 volumes:
   mongo-data:
+  rabbitmq-data:
 
 networks:
   app-net:

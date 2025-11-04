@@ -1,0 +1,12 @@
+---
+- name: Show Running Config
+  hosts: routers
+  gather_facts: no
+  tasks:
+    - name: Run show running-config
+      cisco.ios.ios_command:
+        commands: show running-config
+      register: result
+    - name: Print output
+      debug:
+        var: result.stdout_lines

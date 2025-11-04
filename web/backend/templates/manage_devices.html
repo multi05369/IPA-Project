@@ -188,6 +188,39 @@
 {% block scripts %}
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // --- Ping/Connection Test ---
+    const pingPanel = document.getElementById('connection-test');
+    if (pingPanel) {
+      const input = pingPanel.querySelector('input[type="text"]');
+      const runBtn = pingPanel.querySelector('button');
+      const resultBox = pingPanel.querySelector('pre');
+      const deviceIp = "{{ ip }}";
+      if (runBtn && input && resultBox) {
+        runBtn.addEventListener('click', async () => {
+          const targetIp = input.value.trim();
+          if (!targetIp) {
+            resultBox.textContent = 'Please enter an IP address.';
+            return;
+          }
+          resultBox.textContent = 'Pinging...';
+          try {
+            const response = await fetch(`/manage/${deviceIp}/ping`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ target_ip: targetIp })
+            });
+            const data = await response.json();
+            if (data.status === 'ok') {
+              resultBox.textContent = data.output;
+            } else {
+              resultBox.textContent = 'Error: ' + (data.message || 'Unknown error');
+            }
+          } catch (err) {
+            resultBox.textContent = 'Network error.';
+          }
+        });
+      }
+    }
     const tabs = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     let activePanel = document.querySelector('.tab-content.opacity-100') || panels[0];
@@ -308,6 +341,36 @@
           if (response.ok) {
             alert('Changes saved successfully!');
             console.log(result.message);
+            // Update UI with real interface status from backend
+            if (result.interfaces && Array.isArray(result.interfaces)) {
+              result.interfaces.forEach(iface => {
+                // Find the toggle for this interface
+                const toggle = document.querySelector(`.peer[data-iface-name="${iface.name}"]`);
+                if (toggle) {
+                  toggle.checked = !!iface.enabled;
+                  // Update status text and color
+                  const row = toggle.closest('tr');
+                  if (row) {
+                    const statusCell = row.querySelector('td:nth-child(2) span');
+                    if (statusCell) {
+                      if (iface.status && iface.status.toLowerCase() === 'up') {
+                        statusCell.textContent = 'Online';
+                        statusCell.classList.remove('text-slate-500');
+                        statusCell.classList.add('text-green-400');
+                        const dot = statusCell.querySelector('span');
+                        if (dot) dot.className = 'h-2 w-2 rounded-full bg-green-400';
+                      } else {
+                        statusCell.textContent = 'Offline';
+                        statusCell.classList.remove('text-green-400');
+                        statusCell.classList.add('text-slate-500');
+                        const dot = statusCell.querySelector('span');
+                        if (dot) dot.className = 'h-2 w-2 rounded-full bg-slate-500';
+                      }
+                    }
+                  }
+                }
+              });
+            }
           } else {
             alert('Error saving changes: ' + result.message);
             console.error(result.message);
