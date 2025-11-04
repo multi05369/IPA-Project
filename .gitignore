@@ -10,7 +10,6 @@ __pycache__/
 
 #Node / Tailwind environment
 node_modules/
-package-lock.json
 
 #Compiled Tailwind output (auto-generated)
 backend/static/css/tailwind.css
