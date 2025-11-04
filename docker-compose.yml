@@ -65,9 +65,9 @@ services:
       - app-net
 
       
+
   worker:
     build: ./worker
-    container_name: ipa-worker
     env_file:
       - .env
     environment:
@@ -82,6 +82,9 @@ services:
       - rabbitmq
     networks:
       - app-net
+    restart: always
+    deploy:
+      replicas: 5
 
 volumes:
   mongo-data:

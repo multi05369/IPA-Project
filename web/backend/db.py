@@ -51,12 +51,7 @@ def add_device(ip, username, password, device_type):
         "username": username,
         "password": password,
         "device_type": device_type,
-        "hostname": "",
-        "firmware": "",
-        "running_config": "",
-        "uptime": "",
         "interfaces": [],
-        "vrfs": []
     }
     devices.insert_one(device_data)
     return True
